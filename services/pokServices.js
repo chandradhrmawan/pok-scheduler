@@ -6,17 +6,28 @@ import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
 
 const getDataPok = async (revUid) => {
     try {
+
+        let rkExsist = await db.query(`select COUNT(*) as jml from temp_rencana_kerja trk where REV_UID = '${revUid}'`, {
+            plain: true,
+            type: QueryTypes.SELECT,
+        })
+
+        if (rkExsist['jml'] > 0) {
+            console.log(`data rk : ${revUid} already exsist`)
+            return;
+        }
+
+        console.log(`start process generate pok data`)
         let rkV1 = await db.query(rencanaKerja1(revUid), {
             plain: false,
             type: QueryTypes.SELECT,
         })
 
-        if (rkV1) {
+        if (rkV1.length > 0) {
             for (let index = 0; index < rkV1.length; index++) {
-                console.log(index)
-                let resultProc = {};
                 await db.query(`CALL f_multi('${revUid}','${rkV1[index]['KODE_KEGIATAN']}',@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12)`, {
                 }).then(async (resp) => {
+                    console.log(`process generate data : ${index + 1}`);
                     let rkV2 = await db.query(`SELECT 
                             @1 AS R_TOTAL_SASARAN_VOLUME,
                             @2 AS R_TOTAL_BLNJ_BRG_NON_OP_NON_PEND,
@@ -49,8 +60,11 @@ const getDataPok = async (revUid) => {
                     }
                 })
             }
+        } else {
+            console.log(`data rk : ${revUid} not found`)
         }
-        return rkV1
+
+        if (rkV1.length > 0) await saveRencanaKerja(rkV1)
     } catch (err) {
         throw new Error(err.stack);
     }
@@ -58,6 +72,7 @@ const getDataPok = async (revUid) => {
 
 const saveRencanaKerja = async (data) => {
     try {
+        console.log('process save data rk')
         let bulkSaveData = await tempRencanaKerja.bulkCreate(data)
         return bulkSaveData
     } catch (err) {
