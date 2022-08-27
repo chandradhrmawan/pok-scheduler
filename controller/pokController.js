@@ -6,8 +6,8 @@ moment.locale('id');
 const getPok = async (req, res) => {
     try {
         let { revUid } = req.query
-        setTimeout(function(){
-            getDataPok(revUid);
+        setTimeout(async function () {
+            await getDataPok(revUid);
         }, 1000);
 
         return res.status(statusCode.success).json(successMessage())

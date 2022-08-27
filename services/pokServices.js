@@ -27,7 +27,7 @@ const getDataPok = async (revUid) => {
             for (let index = 0; index < rkV1.length; index++) {
                 await db.query(`CALL f_multi('${revUid}','${rkV1[index]['KODE_KEGIATAN']}',@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12)`, {
                 }).then(async (resp) => {
-                    console.log(`process generate data : ${index + 1}`);
+                    console.log(`process generate data : ${index + 1} | ${rkV1[index]['KODE_KEGIATAN']}`);
                     let rkV2 = await db.query(`SELECT 
                             @1 AS R_TOTAL_SASARAN_VOLUME,
                             @2 AS R_TOTAL_BLNJ_BRG_NON_OP_NON_PEND,
@@ -65,7 +65,9 @@ const getDataPok = async (revUid) => {
         }
 
         if (rkV1.length > 0) await saveRencanaKerja(rkV1)
+        console.log('end process save data rk')
     } catch (err) {
+        console.log(err)
         throw new Error(err.stack);
     }
 }
