@@ -69,6 +69,11 @@ const tempRencanaKerja = db.define('tempRencanaKerja', {
         field: 'BLNJ_BRG_NON_OP_NON_PEND',
         allowNull: true
     },
+    BLNJ_BRG_NON_OP_PEND: {
+        type: Sequelize.NUMBER,
+        field: 'BLNJ_BRG_NON_OP_PEND',
+        allowNull: true
+    },
     BLNJ_BRG_NON_OP_PHLN: {
         type: Sequelize.NUMBER,
         field: 'BLNJ_BRG_NON_OP_PHLN',
