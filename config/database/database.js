@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 import { Sequelize, QueryTypes } from "sequelize";
 dotenv.config();
 
-const db = new Sequelize(process.env.DB_SCEM, process.env.DB_USER, process.env.DB_PASS, {
-    host: process.env.DB_HOST,
+const db = new Sequelize(`${process.env.DB_SCEM}`, `${process.env.DB_USER}`, `${process.env.DB_PASS}`, {
+    host: `${process.env.DB_HOST}`,
     dialect: 'mysql',
     logging: false,
     pool: {
