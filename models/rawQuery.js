@@ -49,13 +49,10 @@ const rencanaKerja1 = (revUid) => {
                         round(sum(a.BLNJ_MDL_NON_OP_SBSN / 1000), 0) AS BLNJ_MDL_NON_OP_SBSN,
                         case
                             when a.KODE_KEGIATAN like '%994' then round(sum(a.JUMLAH_TOTAL / 1000 / 2), 0)
-                            else round(sum(a.JUMLAH_TOTAL / 1000), 0) - round(
-                                sum(a.BLNJ_BRG_NON_OP_NON_PEND / 1000) + round(
-                                    sum(a.BLNJ_MDL_NON_OP_NON_PEND / 1000),
-                                    0
-                                ),
-                                0
-                            )
+                            when a.KODE_KEGIATAN = '06.2409.FS.RDC.003' then round(sum(a.JUMLAH_TOTAL / 1000 / 2), 0)
+                            else round(sum(a.JUMLAH_TOTAL / 1000), 0) 
+                            - round(sum(a.BLNJ_BRG_NON_OP_NON_PEND / 1000) 
+                            + round(sum(a.BLNJ_MDL_NON_OP_NON_PEND / 1000),0),0)
                         end AS JUMLAH_TOTAL,
                         a.BOLD AS BOLD,
                         a.PERIODE AS PERIODE,
