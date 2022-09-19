@@ -14,7 +14,7 @@ const getDataPok = async (revUid) => {
 
         if (rkExsist['jml'] > 0) {
             console.log(`data rk : ${revUid} already exsist`)
-            return;
+            console.log(`delete temp_rencana_kerja revUid : ${revUid}`)
         }
 
         console.log(`start process generate pok data`)
