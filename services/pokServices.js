@@ -113,7 +113,121 @@ const saveRencanaKerja = async (data, revUid) => {
         throw new Error(err);
     }
 }
+
+const delPok = async (data) => {
+    let counter = 0;
+    for (let i = 0; i < data.length; i++) {
+
+        let dataSatker = await db.query(`
+        select 
+        a.UID as POK_UID,
+        c.UID as REV_UID,
+        b.KDSATKER
+        from 
+        d_pok a
+        left join dbzt_satker b on a.SATKER_UID  = b.UID 
+        left join d_pok_revision c on c.pok_uid = a.uid
+        where a.UID = '${data[i]['pokUid']}'`, {
+            plain: true,
+            type: QueryTypes.SELECT
+        });
+        if (dataSatker) {
+            counter++;
+            await db.query(`DELETE from dbzd_trktrm WHERE KDSATKER = '${dataSatker['KDSATKER']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_akun WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_ds WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_indikasijbtn WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_indikasijln WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_item WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_kmpnen WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_output WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_po WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_ruasjbtn WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_ruasjln WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_skmpnen WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_soutput WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from d_pok_signer WHERE POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from d_koordinat_status WHERE POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from d_pok_document WHERE POK_UID = '${data[i]['pokUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from d_paket WHERE POK_UID = '${data[i]['pokUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from dbzd_koordinat_db WHERE D_POK_REVISION_UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from d_lembar_kontrol_1 WHERE POK_UID = '${data[i]['pokUid']}'`, {
+                logging: console.log
+            })
+            await db.query(`DELETE from d_pok_revision WHERE UID = '${data[i]['revUid']}'`, {
+                logging: console.log
+            })
+            try {
+                await db.query(`DELETE from d_pok WHERE UID = '${data[i]['pokUid']}'`, {
+                    logging: console.log
+                })
+            } catch (err) {
+                console.log(`err d_pok uid : ${data[i]['pokUid']}`)
+            }
+        }
+
+        /*
+        DELETE from dbzd_akun WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_ds WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_indikasijbtn WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_indikasijln WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_item WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_kmpnen WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_output WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_po WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_ruasjbtn WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_ruasjln WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_skmpnen WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from dbzd_soutput WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from d_pok_signer WHERE POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from d_koordinat_status WHERE POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE from d_pok_document WHERE POK_UID IN (SELECT POK_UID FROM x_delete);
+        DELETE from dbzd_trktrm WHERE KDSATKER = (SELECT DISTINCT(KDSATKER) FROM x_delete);
+        DELETE FROM d_paket WHERE POK_UID = (SELECT DISTINCT(POK_UID) FROM x_delete);
+        DELETE FROM dbzd_koordinat_db WHERE D_POK_REVISION_UID = (SELECT D_POK_REVISION_UID FROM x_delete);
+        DELETE FROM d_lembar_kontrol_1 WHERE POK_UID = (SELECT DISTINCT(POK_UID) FROM x_delete);
+        */
+    }
+    console.log(counter)
+}
 export {
     getDataPok,
-    saveRencanaKerja
+    saveRencanaKerja,
+    delPok
 }

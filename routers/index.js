@@ -1,7 +1,7 @@
 import express from "express";
 // import { getBooksByGenre, getMultiBooksByGenre } from "../controller/bookController.js";
 // import { postBooking, getBooking } from "../controller/bookingController.js";
-import { getPok, postRencanaKerja } from "../controller/pokController.js";
+import { getPok, postRencanaKerja,deletePok } from "../controller/pokController.js";
 const router = express.Router();
 
 // router.get('/books/get', getBooksByGenre);
@@ -12,5 +12,6 @@ const router = express.Router();
 
 router.get('/pok/get', getPok);
 router.post('/rencana-kerja/save', postRencanaKerja);
+router.delete('/pok/delete', deletePok);
 
 export { router }
