@@ -5,8 +5,8 @@ import {
 import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
 
 const getDataPok = async (revUid) => {
+    const t = await db.transaction();
     try {
-
         let rkExsist = await db.query(`select COUNT(*) as jml from temp_rencana_kerja trk where REV_UID = '${revUid}'`, {
             plain: true,
             type: QueryTypes.SELECT,
@@ -15,6 +15,10 @@ const getDataPok = async (revUid) => {
         if (rkExsist['jml'] > 0) {
             console.log(`data rk : ${revUid} already exsist`)
             console.log(`delete temp_rencana_kerja revUid : ${revUid}`)
+            await db.query(`DELETE from temp_rencana_kerja WHERE REV_UID = '${revUid}'`, {
+                transaction: t
+            })
+            await t.commit();
         }
 
         console.log(`start process generate pok data`)
@@ -64,16 +68,19 @@ const getDataPok = async (revUid) => {
         if (rkV1.length > 0) await saveRencanaKerja(rkV1, revUid)
         console.log('end process save data rk')
     } catch (err) {
+        await t.rollback();
         console.log(err)
         throw new Error(err.stack);
     }
 }
 
 const saveRencanaKerja = async (data, revUid) => {
+    const t = await db.transaction();
     try {
         console.log('process save data rk')
-        let bulkSaveData = await tempRencanaKerja.bulkCreate(data)
-
+        let bulkSaveData = await tempRencanaKerja.bulkCreate(data, {
+            transaction: t
+        })
 
         console.log('process generate total data rk')
         await db.query(`insert into temp_rencana_kerja 
@@ -107,9 +114,12 @@ const saveRencanaKerja = async (data, revUid) => {
         where REV_UID = '${revUid}'
         and LENGTH(KODE_KEGIATAN) = '2'`, {
             type: QueryTypes.INSERT,
+            transaction: t
         })
+        await t.commit();
         return bulkSaveData
     } catch (err) {
+        await t.rollback();
         throw new Error(err);
     }
 }
