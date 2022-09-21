@@ -59,6 +59,18 @@ const getDataPok = async (revUid) => {
                     rkV1[index]['BLNJ_MDL_NON_OP_PEND'] = rkV2['R_TOTAL_BLNJ_MDL_NON_OP_PEND']
                     rkV1[index]['BLNJ_MDL_NON_OP_PHLN'] = rkV2['R_TOTAL_BLNJ_MDL_NON_OP_PHLN']
                     rkV1[index]['BLNJ_MDL_NON_OP_SBSN'] = rkV2['R_TOTAL_BLNJ_MDL_NON_OP_SBSN']
+                    rkV1[index]['JUMLAH_TOTAL'] = rkV2['R_TOTAL_BLNJ_BRG_NON_OP_NON_PEND']
+                        + rkV2['R_TOTAL_BELANJA_PEGAWAI_OPERASIONAL']
+                        + rkV2['R_TOTAL_BELANJA_BARANG_OPERASIONAL']
+                        + rkV2['R_TOTAL_BLNJ_BRG_NON_OP_PEND']
+                        + rkV2['R_TOTAL_BLNJ_BRG_NON_OP_PHLN']
+                        + rkV2['R_TOTAL_BLNJ_BRG_NON_OP_SBSN']
+                        + rkV2['R_TOTAL_BELANJA_MODAL_OPERASIONAL']
+                        + rkV2['R_TOTAL_BLNJ_MDL_NON_OP_NON_PEND']
+                        + rkV2['R_TOTAL_BLNJ_MDL_NON_OP_PEND']
+                        + rkV2['R_TOTAL_BLNJ_MDL_NON_OP_PHLN']
+                        + rkV2['R_TOTAL_BLNJ_MDL_NON_OP_SBSN']
+
                 })
             }
         } else {
@@ -211,33 +223,41 @@ const delPok = async (data) => {
                 console.log(`err d_pok uid : ${data[i]['pokUid']}`)
             }
         }
-
-        /*
-        DELETE from dbzd_akun WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_ds WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_indikasijbtn WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_indikasijln WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_item WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_kmpnen WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_output WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_po WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_ruasjbtn WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_ruasjln WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_skmpnen WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from dbzd_soutput WHERE D_POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from d_pok_signer WHERE POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from d_koordinat_status WHERE POK_REVISION_UID IN (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE from d_pok_document WHERE POK_UID IN (SELECT POK_UID FROM x_delete);
-        DELETE from dbzd_trktrm WHERE KDSATKER = (SELECT DISTINCT(KDSATKER) FROM x_delete);
-        DELETE FROM d_paket WHERE POK_UID = (SELECT DISTINCT(POK_UID) FROM x_delete);
-        DELETE FROM dbzd_koordinat_db WHERE D_POK_REVISION_UID = (SELECT D_POK_REVISION_UID FROM x_delete);
-        DELETE FROM d_lembar_kontrol_1 WHERE POK_UID = (SELECT DISTINCT(POK_UID) FROM x_delete);
-        */
     }
-    console.log(counter)
+}
+
+const getDataPokF = async (revUid, kodeKegiatan) => {
+    try {
+        let ret;
+        await db.query(`CALL f_multi('${revUid}','${kodeKegiatan}',@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12)`, {
+        }).then(async (resp) => {
+            await db.query(`SELECT 
+                            @2 AS R_TOTAL_BLNJ_BRG_NON_OP_NON_PEND,
+                            @3 AS R_TOTAL_BELANJA_PEGAWAI_OPERASIONAL,
+                            @4 AS R_TOTAL_BELANJA_BARANG_OPERASIONAL,
+                            @5 AS R_TOTAL_BLNJ_BRG_NON_OP_PEND,
+                            @6 AS R_TOTAL_BLNJ_BRG_NON_OP_PHLN,
+                            @7 AS R_TOTAL_BLNJ_BRG_NON_OP_SBSN,
+                            @8 AS R_TOTAL_BELANJA_MODAL_OPERASIONAL,
+                            @9 AS R_TOTAL_BLNJ_MDL_NON_OP_NON_PEND,
+                            @10 AS R_TOTAL_BLNJ_MDL_NON_OP_PEND,
+                            @11 AS R_TOTAL_BLNJ_MDL_NON_OP_PHLN,
+                            @12 AS R_TOTAL_BLNJ_MDL_NON_OP_SBSN`, {
+                plain: true,
+                type: QueryTypes.SELECT,
+            }).then(async (resp1) => {
+                ret = resp1
+            })
+        })
+        return ret
+    } catch (err) {
+        console.log(err)
+        throw new Error(err.stack);
+    }
 }
 export {
     getDataPok,
     saveRencanaKerja,
-    delPok
+    delPok,
+    getDataPokF
 }
