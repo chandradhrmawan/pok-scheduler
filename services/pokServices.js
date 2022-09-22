@@ -49,6 +49,19 @@ const getDataPok = async (revUid) => {
                         type: QueryTypes.SELECT,
                     })
 
+                    //generate sasaran satuan untuk level 4 dan 5
+                    if (rkV1[index]['KODE_KEGIATAN'].length >= 14) {
+                        let dataSatuan = await db.query(`SELECT SASARAN_SATUAN 
+                        FROM v_1_rencana_kerja WHERE REV_UID = '${revUid}'
+                        AND KODE_KEGIATAN = '${rkV1[index]['KODE_KEGIATAN']}'
+                        AND SASARAN_SATUAN IN ('M', 'KM', 'DOKUM', 'LAYAN')
+                        GROUP BY SASARAN_SATUAN`, {
+                            plain: true,
+                            type: QueryTypes.SELECT,
+                        })
+                        rkV1[index]['SASARAN_SATUAN'] = dataSatuan['SASARAN_SATUAN']
+                    }
+
                     rkV1[index]['SASARAN_VOLUME'] = rkV2['R_TOTAL_SASARAN_VOLUME']
                     rkV1[index]['BLNJ_BRG_NON_OP_NON_PEND'] = rkV2['R_TOTAL_BLNJ_BRG_NON_OP_NON_PEND']
                     rkV1[index]['BELANJA_PEGAWAI_OPERASIONAL'] = rkV2['R_TOTAL_BELANJA_PEGAWAI_OPERASIONAL']
