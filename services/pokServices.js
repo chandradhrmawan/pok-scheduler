@@ -29,7 +29,7 @@ const getDataPok = async (revUid) => {
 
         if (rkV1.length > 0) {
             for (let index = 0; index < rkV1.length; index++) {
-                await db.query(`CALL f_multi('${revUid}','${rkV1[index]['KODE_KEGIATAN']}',@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12)`, {
+                await db.query(`CALL f_multi('${revUid}','${rkV1[index]['KODE_KEGIATAN']}',@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12,@13)`, {
                 }).then(async (resp) => {
                     console.log(`process generate data : ${index + 1} | ${rkV1[index]['KODE_KEGIATAN']}`);
                     let rkV2 = await db.query(`SELECT 
@@ -43,7 +43,8 @@ const getDataPok = async (revUid) => {
                             @9 AS R_TOTAL_BLNJ_MDL_NON_OP_NON_PEND,
                             @10 AS R_TOTAL_BLNJ_MDL_NON_OP_PEND,
                             @11 AS R_TOTAL_BLNJ_MDL_NON_OP_PHLN,
-                            @12 AS R_TOTAL_BLNJ_MDL_NON_OP_SBSN;`, {
+                            @12 AS R_TOTAL_BLNJ_MDL_NON_OP_SBSN,
+                            @13 AS R_TOTAL_SASARAN_VOLUME`, {
                         plain: true,
                         type: QueryTypes.SELECT,
                     })
