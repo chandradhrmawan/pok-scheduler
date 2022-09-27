@@ -59,7 +59,7 @@ const getDataPok = async (revUid) => {
                             plain: true,
                             type: QueryTypes.SELECT,
                         })
-                        rkV1[index]['SASARAN_SATUAN'] = dataSatuan['SASARAN_SATUAN']
+                        rkV1[index]['SASARAN_SATUAN'] = dataSatuan ? dataSatuan['SASARAN_SATUAN'] : null
                     }
 
                     rkV1[index]['SASARAN_VOLUME'] = rkV2['R_TOTAL_SASARAN_VOLUME']
