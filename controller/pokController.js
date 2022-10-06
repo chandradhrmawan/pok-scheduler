@@ -1,5 +1,5 @@
 import { errorMessage, statusCode, successMessage } from "../helpers/statusHelpers.js"
-import { getDataPok, saveRencanaKerja, delPok, getDataPokF } from "../services/pokServices.js";
+import { getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService } from "../services/pokServices.js";
 import moment from "moment";
 moment.locale('id');
 
@@ -64,9 +64,31 @@ const deletePok = async (req, res) => {
     }
 }
 
+const uploadedPok = async (req, res) => {
+    try {
+        let data = req.query
+        let result = await uploadedPokService(data);
+        return res.status(statusCode.success).json(successMessage(result))
+    } catch (err) {
+        return res.status(statusCode.bad).json(errorMessage(err))
+    }
+}
+
+const approvedPok = async (req, res) => {
+    try {
+        let data = req.query
+        let result = await approvedPokService(data);
+        return res.status(statusCode.success).json(successMessage(result))
+    } catch (err) {
+        return res.status(statusCode.bad).json(errorMessage(err))
+    }
+}
+
 export {
     getPok,
     postRencanaKerja,
     deletePok,
-    getPokF
+    getPokF,
+    uploadedPok,
+    approvedPok
 }

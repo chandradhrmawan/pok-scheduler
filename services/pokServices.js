@@ -3,6 +3,8 @@ import {
     rencanaKerja1,
 } from "../models/rawQuery.js";
 import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
+import axios from "axios";
+
 
 const getDataPok = async (revUid) => {
     const t = await db.transaction();
@@ -270,9 +272,111 @@ const getDataPokF = async (revUid, kodeKegiatan) => {
         throw new Error(err.stack);
     }
 }
+
+const getDataKordinat = async (data) => {
+    let dataKordinat = await db.query(`select
+    b.UID, 
+    d.KDSATKER,
+    b.THANG,
+    b.DS_STATUS,
+    DATE_FORMAT(b.UPLOAD_DATE,'%d-%m-%Y %H:%i:%s') as UPLOAD_DATE, 
+    DATE_FORMAT(b.APPROVED_BALAI_DATE,'%d-%m-%Y %H:%i:%s') as APPROVED_BALAI_DATE
+from
+    d_pok_revision a
+    join d_koordinat_status b on a.UID = b.POK_REVISION_UID 
+    join d_pok c on c.uid = a.POK_UID 
+    join dbzt_satker d on d.UID = c.SATKER_UID 
+where
+    d.KDSATKER  = $1
+    and b.DS_STATUS = $2`, {
+        bind: [data['kdsatker'], data['revstatus']],
+        plain: true,
+        type: QueryTypes.SELECT,
+    })
+    return dataKordinat
+}
+
+const uploadedPokService = async (data) => {
+    let dataKordinat = await getDataKordinat(data)
+    let uploadedStatus = null
+    if (dataKordinat) {
+        let postData = {
+            satker_code: dataKordinat['KDSATKER'],
+            year: dataKordinat['THANG'],
+            status: dataKordinat['DS_STATUS'],
+            upload_date: dataKordinat['UPLOAD_DATE'],
+        }
+        await axios.post('http://103.211.50.35/sidako_update/services/uploaded-pok',
+            postData).then(function async(response) {
+                console.log(response)
+                uploadedStatus = response['data']['saved']
+            }).catch(function async(error) {
+                console.log(error['response']['data'])
+                throw error['response']['data']
+            });
+
+        await db.query(`UPDATE pok_online.d_koordinat_status
+        SET UPLOADED_STATUS=$1
+        WHERE UID=$2`, {
+            bind: [uploadedStatus, dataKordinat['UID']],
+            type: QueryTypes.UPDATE,
+        })
+
+    } else {
+        return {
+            status: false,
+            message: 'Pok Not Found'
+        }
+    }
+
+    return {
+        status: true,
+    }
+}
+
+const approvedPokService = async (data) => {
+    let dataKordinat = await getDataKordinat(data)
+    let uploadedStatus = null
+    if (dataKordinat) {
+        let postData = {
+            satker_code: dataKordinat['KDSATKER'],
+            year: dataKordinat['THANG'],
+            status: dataKordinat['DS_STATUS'],
+            upload_date: dataKordinat['UPLOAD_DATE'],
+            approved_date: dataKordinat['APPROVED_BALAI_DATE'],
+        }
+        await axios.post('http://103.211.50.35/sidako_update/services/approved-pok',
+            postData).then(function async(response) {
+                console.log(response)
+                uploadedStatus = response['data']['saved']
+            }).catch(function async(error) {
+                console.log(error['response']['data'])
+                throw error['response']['data']
+            });
+
+        await db.query(`UPDATE pok_online.d_koordinat_status
+        SET UPLOADED_STATUS=$1
+        WHERE UID=$2`, {
+            bind: [uploadedStatus, dataKordinat['UID']],
+            type: QueryTypes.UPDATE,
+        })
+
+    } else {
+        return {
+            status: false,
+            message: 'Pok Not Found'
+        }
+    }
+
+    return {
+        status: true,
+    }
+}
 export {
     getDataPok,
     saveRencanaKerja,
     delPok,
-    getDataPokF
+    getDataPokF,
+    uploadedPokService,
+    approvedPokService
 }
