@@ -1,7 +1,35 @@
 import { errorMessage, statusCode, successMessage } from "../helpers/statusHelpers.js"
-import { getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService } from "../services/pokServices.js";
+import { getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService, generateLembarService } from "../services/pokServices.js";
+import ejs from 'ejs'
+import path from 'path'
+import { fileURLToPath } from 'url';
+import puppeteer from 'puppeteer'
+import fs from 'fs';
 import moment from "moment";
+import pdf from "html-pdf";
+
 moment.locale('id');
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const passengers = [
+    {
+        name: "Joyce",
+        flightNumber: 7859,
+        time: "18h00",
+    },
+    {
+        name: "Brock",
+        flightNumber: 7859,
+        time: "18h00",
+    },
+    {
+        name: "Eve",
+        flightNumber: 7859,
+        time: "18h00",
+    },
+];
 
 const getPok = async (req, res) => {
     try {
@@ -84,11 +112,121 @@ const approvedPok = async (req, res) => {
     }
 }
 
+const generateLembarKontrol = async (req, res) => {
+    try {
+        let data = req.query
+        let result = await generateLembarService(data);
+        return res.status(statusCode.success).json(successMessage(result))
+    } catch (err) {
+        return res.status(statusCode.bad).json(errorMessage(err))
+    }
+}
+
+const printHtml = async (req, res) => {
+    try {
+        const filePath = path.join(__dirname, "../views/print.ejs")
+        ejs.renderFile(filePath, { passengers }, (err, html) => {
+            if (err) {
+                return res.send('Error Load Data Html')
+            }
+            return res.send(html)
+        })
+    } catch (err) {
+        return res.status(statusCode.bad).json(errorMessage(err.toString()))
+    }
+}
+
+const printPdf = async (req, res) => {
+    try {
+        const browser = await puppeteer.launch()
+        const page = await browser.newPage()
+
+        await page.goto('http://localhost:3500/api/printHtml', {
+            waitUntil: 'networkidle0'
+        })
+
+        const pdf = await page.pdf({
+            printBackground: true,
+            format: 'Letter'
+        })
+        await browser.close()
+
+        let reportName = `report_${Date.now()}.pdf`
+        let path = `./temp/${reportName}`
+        fs.writeFile(path, pdf, {}, (err) => {
+            if (err) {
+                return console.error('error write file', err.toString())
+            }
+            var data = fs.readFileSync(path);
+            res.contentType("application/pdf");
+            res.send(data);
+
+            fs.unlink(path, (error) => {
+                if (error) {
+                    return console.error('error write file', error.toString())
+                }
+            })
+        })
+
+    } catch (err) {
+        return res.status(statusCode.bad).json(errorMessage(err.toString()))
+    }
+}
+
+const printHtmlPdf = (req, res) => {
+    try {
+        const filePath = path.join(__dirname, "../views/print.ejs")
+        ejs.renderFile(filePath, { passengers }, (err, html) => {
+            
+            if (err) {
+                return res.send('Error Load Data Html')
+            }
+
+            let options = {
+                "height": "11.25in",
+                "width": "8.5in",
+                "header": {
+                    "height": "20mm"
+                },
+                "footer": {
+                    "height": "20mm",
+                },
+            };
+
+            let reportName = `report_${Date.now()}.pdf`
+            let path = `./temp/${reportName}`
+            pdf.create(html, options).toFile(path, function (err, data) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    // res.send("File created successfully");
+                    var data = fs.readFileSync(path);
+                    res.contentType("application/pdf");
+                    res.send(data);
+
+                    fs.unlink(path, (error) => {
+                        if (error) {
+                            return console.error('error write file', error.toString())
+                        }
+                    })
+                }
+            });
+
+        })
+    } catch (err) {
+        return res.status(statusCode.bad).json(errorMessage(err.toString()))
+    }
+}
+
 export {
     getPok,
     postRencanaKerja,
     deletePok,
     getPokF,
     uploadedPok,
-    approvedPok
+    approvedPok,
+    generateLembarKontrol,
+    printHtml,
+    printPdf,
+    printHtmlPdf
 }

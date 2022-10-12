@@ -372,11 +372,17 @@ const approvedPokService = async (data) => {
         status: true,
     }
 }
+
+const generateLembarService = async (data) => {
+    console.log('sini')
+}
+
 export {
     getDataPok,
     saveRencanaKerja,
     delPok,
     getDataPokF,
     uploadedPokService,
-    approvedPokService
+    approvedPokService,
+    generateLembarService
 }

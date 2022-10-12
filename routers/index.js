@@ -1,11 +1,17 @@
 import express from "express";
-import { getPok, postRencanaKerja, deletePok, getPokF, uploadedPok, approvedPok } from "../controller/pokController.js";
+import { getPok, postRencanaKerja, deletePok, getPokF, uploadedPok, approvedPok, generateLembarKontrol, printPdf, printHtml, printHtmlPdf } from "../controller/pokController.js";
 const router = express.Router();
 
 router.get('/pok/get', getPok);
 router.get('/pok/rencana-kerja/sum-kode-kegiatan', getPokF);
 router.post('/rencana-kerja/save', postRencanaKerja);
 router.delete('/pok/delete', deletePok);
+router.get('/pok/lembar-kontrol/generate', generateLembarKontrol);
+
+router.get('/printHtml', printHtml)
+router.get('/printPdf', printPdf)
+
+router.get('/printHtmlPdf', printHtmlPdf)
 
 router.get('/pok/sidako/uploaded-pok', uploadedPok);
 router.get('/pok/sidako/approved-pok', approvedPok);
