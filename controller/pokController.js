@@ -6,32 +6,13 @@ import {
 import ejs from 'ejs'
 import path from 'path'
 import { fileURLToPath } from 'url';
-import puppeteer from 'puppeteer'
 import fs from 'fs';
 import moment from "moment";
 import pdf from "html-pdf";
 moment.locale('id');
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const passengers = [
-    {
-        name: "Joyce",
-        flightNumber: 7859,
-        time: "18h00",
-    },
-    {
-        name: "Brock",
-        flightNumber: 7859,
-        time: "18h00",
-    },
-    {
-        name: "Eve",
-        flightNumber: 7859,
-        time: "18h00",
-    },
-];
 
 const getPok = async (req, res) => {
     try {
@@ -126,6 +107,23 @@ const generateLembarKontrol = async (req, res) => {
 
 const printHtml = async (req, res) => {
     try {
+        const passengers = [
+            {
+                name: "Joyce",
+                flightNumber: 7859,
+                time: "18h00",
+            },
+            {
+                name: "Brock",
+                flightNumber: 7859,
+                time: "18h00",
+            },
+            {
+                name: "Eve",
+                flightNumber: 7859,
+                time: "18h00",
+            },
+        ];
         const filePath = path.join(__dirname, "../views/print.ejs")
         ejs.renderFile(filePath, { passengers }, (err, html) => {
             if (err) {
@@ -138,42 +136,6 @@ const printHtml = async (req, res) => {
     }
 }
 
-const printPdf = async (req, res) => {
-    try {
-        const browser = await puppeteer.launch()
-        const page = await browser.newPage()
-
-        await page.goto('http://localhost:3500/api/printHtml', {
-            waitUntil: 'networkidle0'
-        })
-
-        const pdf = await page.pdf({
-            printBackground: true,
-            format: 'Letter'
-        })
-        await browser.close()
-
-        let reportName = `report_${Date.now()}.pdf`
-        let path = `./temp/${reportName}`
-        fs.writeFile(path, pdf, {}, (err) => {
-            if (err) {
-                return console.error('error write file', err.toString())
-            }
-            var data = fs.readFileSync(path);
-            res.contentType("application/pdf");
-            res.send(data);
-
-            fs.unlink(path, (error) => {
-                if (error) {
-                    return console.error('error write file', error.toString())
-                }
-            })
-        })
-
-    } catch (err) {
-        return res.status(statusCode.bad).json(errorMessage(err.toString()))
-    }
-}
 
 const printHtmlPdf = (req, res) => {
     try {
@@ -243,7 +205,6 @@ export {
     approvedPok,
     generateLembarKontrol,
     printHtml,
-    printPdf,
     printHtmlPdf,
     generateStrukturKegiatan
 }
