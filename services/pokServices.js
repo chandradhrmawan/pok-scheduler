@@ -502,19 +502,33 @@ const generateStrukturKegiatanService = async (revUid) => {
 
 
                 //generate sasaran satuan untuk level 4 dan 5
-                skV1[index]['SASARAN_SATUAN'] = null
+                skV1[index]['SASARAN_SATUAN'] = '-'
+                skV1[index]['SASARAN_VOLUME'] = 0
                 if (skV1[index]['KODE_KEGIATAN'].length >= 13) {
-                    let dataSatuan = await db.query(`SELECT SASARAN_SATUAN 
+                    let dataSatuan = await db.query(`SELECT SASARAN_SATUAN,
+                    ROUND(SUM(SASARAN_VOLUME),2) AS SASARAN_VOLUME  
                     FROM v_2_struktur_kegiatan WHERE REV_UID = '${revUid}'
                     AND KODE_KEGIATAN = '${skV1[index]['KODE_KEGIATAN']}'
                     AND SASARAN_SATUAN IN ('M', 'KM', 'DOKUM', 'LAYAN')
                     GROUP BY SASARAN_SATUAN`, {
-                        plain: true,
+                        plain: false,
                         type: QueryTypes.SELECT,
                     })
-                    skV1[index]['SASARAN_SATUAN'] = dataSatuan ? dataSatuan['SASARAN_SATUAN'] : null
-                }
 
+                    if (dataSatuan.length > 1) {
+                        let satuan = "", volume = ""
+                        for (let i = 0; i < dataSatuan.length; i++) {
+                            satuan += `${dataSatuan[i]['SASARAN_SATUAN']}/`
+                            volume += `${dataSatuan[i]['SASARAN_VOLUME']}/`
+                        }
+                        skV1[index]['SASARAN_SATUAN'] = satuan.slice(0, -1);
+                        skV1[index]['SASARAN_VOLUME'] = volume.slice(0, -1);
+                        skV1[index]['KODE_KEGIATAN'] = `${skV1[index]['KODE_KEGIATAN']} **`
+                    } else {
+                        skV1[index]['SASARAN_SATUAN'] = dataSatuan[0]['SASARAN_VOLUME'] != '0' ? dataSatuan[0]['SASARAN_SATUAN'] : '-'
+                        skV1[index]['SASARAN_VOLUME'] = dataSatuan[0]['SASARAN_VOLUME']
+                    }
+                }
             }
         } else {
             console.log(`data struktur kegiatan : ${revUid} not found`)

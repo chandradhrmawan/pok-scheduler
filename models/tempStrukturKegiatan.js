@@ -40,12 +40,12 @@ const tempStrukturKegiatan = db.define('tempStrukturKegiatan', {
         allowNull: true
     },
     SASARAN_VOLUME: {
-        type: Sequelize.NUMBER,
+        type: Sequelize.STRING(100),
         field: 'SASARAN_VOLUME',
         allowNull: true
     },
     SASARAN_SATUAN: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(100),
         field: 'SASARAN_SATUAN',
         allowNull: true
     },
