@@ -1,8 +1,10 @@
 import { db, QueryTypes } from "../config/database/database.js"
 import {
     rencanaKerja1,
+    strukturKegiatan1
 } from "../models/rawQuery.js";
 import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
+import { tempStrukturKegiatan } from "../models/tempStrukturKegiatan.js";
 import axios from "axios";
 
 
@@ -377,6 +379,206 @@ const generateLembarService = async (data) => {
     console.log('sini')
 }
 
+const generateStrukturKegiatanService = async (revUid) => {
+    const t = await db.transaction();
+    try {
+        let skExsist = await db.query(`select COUNT(*) as jml from temp_struktur_kegiatan trk where REV_UID = '${revUid}'`, {
+            plain: true,
+            type: QueryTypes.SELECT,
+        })
+
+        if (skExsist['jml'] > 0) {
+            console.log(`data struktur kegiatan : ${revUid} already exsist`)
+            console.log(`delete temp_struktur_kegiatan revUid : ${revUid}`)
+            await db.query(`DELETE from temp_struktur_kegiatan WHERE REV_UID = '${revUid}'`, {
+                transaction: t
+            })
+            await t.commit();
+        }
+
+        console.log(`start process generate temp_struktur_kegiatan data`)
+        let skV1 = await db.query(strukturKegiatan1(revUid), {
+            plain: false,
+            type: QueryTypes.SELECT,
+        })
+
+        if (skV1.length > 0) {
+            for (let index = 0; index < skV1.length; index++) {
+                // console.log(skV1[index]['KODE_KEGIATAN'])
+                if (skV1[index]['KODE_KEGIATAN'].length == 2) {
+                    await db.query(`select
+                        a.KDPPK1,
+                        a.KDHEADER, 
+                        a.NMITEM
+                    from
+                        dbzd_po a
+                    where
+                        a.D_POK_REVISION_UID = '${revUid}'
+                    and KDPPK1 = '01' and KDHEADER = '1'
+                    GROUP BY KDPPK1,KDHEADER,NMITEM`, {
+                        plain: true,
+                        type: QueryTypes.SELECT,
+                    }).then(resp1 => {
+                        skV1[index]['NAMA_KEGIATAN'] = resp1['NMITEM']
+                    })
+                } else if (skV1[index]['KODE_KEGIATAN'].length == 4) {
+                    await db.query(`select x.* from (
+                        select
+                            a.KDPPK1,
+                            a.KDPROGRAM1,
+                            a.KDGIAT1,
+                            case
+                                when a.KDPAKET1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1, '.', a.KDGIAT1, '.', a.KDPAKET1)
+                                when a.KDGIAT1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1, '.', a.KDGIAT1)
+                                when a.KDPROGRAM1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1)
+                                else a.KDPPK1
+                        end AS KODE_KEGIATAN,
+                        NMITEM 
+                        from
+                            dbzd_po a
+                        where
+                            a.D_POK_REVISION_UID = '${revUid}'
+                            and TRIM(a.KDGIAT1) = '') x
+                            where x.KODE_KEGIATAN = '${skV1[index]['KODE_KEGIATAN']}'
+                         GROUP BY x.KDPPK1,x.KDPROGRAM1,x.KDGIAT1,x.KODE_KEGIATAN`, {
+                        plain: true,
+                        type: QueryTypes.SELECT,
+                    }).then(resp2 => {
+                        skV1[index]['NAMA_KEGIATAN'] = resp2['NMITEM']
+                    })
+                } else if (skV1[index]['KODE_KEGIATAN'].length == 10) {
+                    await db.query(`select x.* from (
+                        select
+                            a.KDPPK1,
+                            a.KDPROGRAM1,
+                            a.KDGIAT1,
+                            case
+                                when a.KDPAKET1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1, '.', a.KDGIAT1, '.', a.KDPAKET1)
+                                when a.KDGIAT1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1, '.', a.KDGIAT1)
+                                when a.KDPROGRAM1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1)
+                                else a.KDPPK1
+                        end AS KODE_KEGIATAN,
+                        NMITEM 
+                        from
+                            dbzd_po a
+                        where
+                            a.D_POK_REVISION_UID = '${revUid}'
+                            and TRIM(a.KDPAKET1) = '') x
+                            where x.KODE_KEGIATAN = '${skV1[index]['KODE_KEGIATAN']}'
+                         GROUP BY x.KDPPK1,x.KDPROGRAM1,x.KDGIAT1,x.KODE_KEGIATAN`, {
+                        plain: true,
+                        type: QueryTypes.SELECT,
+                    }).then(resp4 => {
+                        skV1[index]['NAMA_KEGIATAN'] = resp4['NMITEM']
+                    })
+                } else if (skV1[index]['KODE_KEGIATAN'].length == 13) {
+                    await db.query(`select x.* from (
+                        select
+                            a.KDPPK1,
+                            a.KDPROGRAM1,
+                            a.KDGIAT1,
+                            a.LVL,
+                            case
+                                when a.KDPAKET1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1, '.', a.KDGIAT1, '.', a.KDPAKET1)
+                                when a.KDGIAT1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1, '.', a.KDGIAT1)
+                                when a.KDPROGRAM1 <> '' then concat(a.KDPPK1, '.', a.KDPROGRAM1)
+                                else a.KDPPK1
+                        end AS KODE_KEGIATAN,
+                        NMITEM 
+                        from
+                            dbzd_po a
+                        where
+                            a.D_POK_REVISION_UID = '${revUid}'
+                            and LVL = '03'
+                            ) x
+                            where x.KODE_KEGIATAN = '${skV1[index]['KODE_KEGIATAN']}'
+                         GROUP BY x.KDPPK1,x.KDPROGRAM1,x.KDGIAT1,x.KODE_KEGIATAN`, {
+                        plain: true,
+                        type: QueryTypes.SELECT,
+                    }).then(resp5 => {
+                        skV1[index]['NAMA_KEGIATAN'] = resp5['NMITEM']
+                    })
+                }
+
+
+                //generate sasaran satuan untuk level 4 dan 5
+                skV1[index]['SASARAN_SATUAN'] = null
+                if (skV1[index]['KODE_KEGIATAN'].length >= 13) {
+                    let dataSatuan = await db.query(`SELECT SASARAN_SATUAN 
+                    FROM v_2_struktur_kegiatan WHERE REV_UID = '${revUid}'
+                    AND KODE_KEGIATAN = '${skV1[index]['KODE_KEGIATAN']}'
+                    AND SASARAN_SATUAN IN ('M', 'KM', 'DOKUM', 'LAYAN')
+                    GROUP BY SASARAN_SATUAN`, {
+                        plain: true,
+                        type: QueryTypes.SELECT,
+                    })
+                    skV1[index]['SASARAN_SATUAN'] = dataSatuan ? dataSatuan['SASARAN_SATUAN'] : null
+                }
+
+            }
+        } else {
+            console.log(`data struktur kegiatan : ${revUid} not found`)
+        }
+
+        if (skV1.length > 0) await saveStrukturKegiatan(skV1, revUid)
+        console.log('end process save data struktur kegiatan')
+    } catch (err) {
+        await t.rollback();
+        console.log(err)
+        throw new Error(err.stack);
+    }
+}
+
+const saveStrukturKegiatan = async (data, revUid) => {
+    const t = await db.transaction();
+    try {
+        console.log('process save struktur kegiatan')
+        let bulkSaveData = await tempStrukturKegiatan.bulkCreate(data, {
+            returning: true,
+            transaction: t
+        })
+
+        console.log('process generate total data struktur kegiatan')
+        // await db.query(`insert into temp_struktur_kegiatan 
+        // select
+        //     null as ID,
+        //     POK_UID  as POK_UID,
+        //     REV_UID as REV_UID,
+        //     'AWAL' as STATUS,
+        //     '0' as STATUS_DATA,
+        //     null as KODE_KEGIATAN,
+        //     'JUMLAH TOTAL' as NAMA_KEGIATAN ,
+        //     null as SASARAN_VOLUME,
+        //     null as SASARAN_SATUAN ,
+        //     SUM(BELANJA_PEGAWAI_OPERASIONAL),
+        //     SUM(BELANJA_BARANG_OPERASIONAL),
+        //     SUM(BLNJ_BRG_NON_OP_NON_PEND),
+        //     SUM(BLNJ_BRG_NON_OP_PEND),
+        //     SUM(BLNJ_BRG_NON_OP_PHLN),
+        //     SUM(BLNJ_BRG_NON_OP_SBSN),
+        //     SUM(BELANJA_MODAL_OPERASIONAL),
+        //     SUM(BLNJ_MDL_NON_OP_NON_PEND),
+        //     SUM(BLNJ_MDL_NON_OP_PEND),
+        //     SUM(BLNJ_MDL_NON_OP_PHLN), 
+        //     SUM(BLNJ_MDL_NON_OP_SBSN),
+        //     SUM(JUMLAH_TOTAL),
+        //     'Y' as BOLD,
+        //     0 as PERIODE 
+        // from
+        //     temp_struktur_kegiatan trk
+        // where REV_UID = '${revUid}'
+        // and LENGTH(KODE_KEGIATAN) = '2'`, {
+        //     type: QueryTypes.INSERT,
+        //     transaction: t
+        // })
+        await t.commit();
+        return bulkSaveData
+    } catch (err) {
+        await t.rollback();
+        throw new Error(err);
+    }
+}
+
 export {
     getDataPok,
     saveRencanaKerja,
@@ -384,5 +586,6 @@ export {
     getDataPokF,
     uploadedPokService,
     approvedPokService,
-    generateLembarService
+    generateLembarService,
+    generateStrukturKegiatanService
 }

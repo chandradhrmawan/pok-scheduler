@@ -1,5 +1,8 @@
 import { errorMessage, statusCode, successMessage } from "../helpers/statusHelpers.js"
-import { getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService, generateLembarService } from "../services/pokServices.js";
+import {
+    getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService, generateLembarService,
+    generateStrukturKegiatanService
+} from "../services/pokServices.js";
 import ejs from 'ejs'
 import path from 'path'
 import { fileURLToPath } from 'url';
@@ -7,7 +10,6 @@ import puppeteer from 'puppeteer'
 import fs from 'fs';
 import moment from "moment";
 import pdf from "html-pdf";
-
 moment.locale('id');
 
 
@@ -177,7 +179,7 @@ const printHtmlPdf = (req, res) => {
     try {
         const filePath = path.join(__dirname, "../views/print.ejs")
         ejs.renderFile(filePath, { passengers }, (err, html) => {
-            
+
             if (err) {
                 return res.send('Error Load Data Html')
             }
@@ -218,6 +220,20 @@ const printHtmlPdf = (req, res) => {
     }
 }
 
+const generateStrukturKegiatan = async (req, res) => {
+    try {
+        let { revUid } = req.query
+        setTimeout(async function () {
+            await generateStrukturKegiatanService(revUid);
+        }, 1000);
+
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.message))
+    }
+}
+
 export {
     getPok,
     postRencanaKerja,
@@ -228,5 +244,6 @@ export {
     generateLembarKontrol,
     printHtml,
     printPdf,
-    printHtmlPdf
+    printHtmlPdf,
+    generateStrukturKegiatan
 }
