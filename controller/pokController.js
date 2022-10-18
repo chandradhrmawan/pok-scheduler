@@ -99,7 +99,7 @@ const generateLembarKontrol = async (req, res) => {
     try {
         let data = req.query
         let result = await generateLembarService(data);
-        return res.status(statusCode.success).json(successMessage(result))
+        return res.status(statusCode.success).json(successMessage())
     } catch (err) {
         return res.status(statusCode.bad).json(errorMessage(err))
     }
