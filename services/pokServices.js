@@ -580,6 +580,21 @@ const saveStrukturKegiatan = async (data, revUid) => {
             transaction: t
         })
 
+        let nmSatker = "";
+        await db.query(`select
+            c.NMSATKER 
+        from
+            d_pok_revision a
+            join d_pok b on a.POK_UID = b.uid
+            join dbzt_satker c on c.UID = b.SATKER_UID 
+        where
+            a.UID = '${revUid}'`, {
+            plain: true,
+            type: QueryTypes.SELECT,
+        }).then(resp1 => {
+            nmSatker = resp1['NMSATKER']
+        })
+
         console.log('process generate total data struktur kegiatan')
         await db.query(`insert into temp_struktur_kegiatan 
         select
@@ -589,7 +604,7 @@ const saveStrukturKegiatan = async (data, revUid) => {
             'AWAL' as STATUS,
             '0' as STATUS_DATA,
             null as KODE_KEGIATAN,
-            'JUMLAH TOTAL' as NAMA_KEGIATAN ,
+            'JUMLAH TOTAL ${nmSatker}' as NAMA_KEGIATAN ,
             null as SASARAN_VOLUME,
             null as SASARAN_SATUAN ,
             SUM(BELANJA_PEGAWAI_OPERASIONAL),
