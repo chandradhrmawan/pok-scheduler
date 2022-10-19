@@ -503,7 +503,7 @@ const generateStrukturKegiatanService = async (revUid) => {
 
                 //generate sasaran satuan untuk level 4 dan 5
                 skV1[index]['SASARAN_SATUAN'] = '-'
-                skV1[index]['SASARAN_VOLUME'] = 0
+                skV1[index]['SASARAN_VOLUME'] = '-'
                 if (skV1[index]['KODE_KEGIATAN'].length >= 13) {
                     let dataSatuan = await db.query(`SELECT SASARAN_SATUAN,
                     ROUND(SUM(SASARAN_VOLUME),2) AS SASARAN_VOLUME  
@@ -519,14 +519,14 @@ const generateStrukturKegiatanService = async (revUid) => {
                         let satuan = "", volume = ""
                         for (let i = 0; i < dataSatuan.length; i++) {
                             satuan += `${dataSatuan[i]['SASARAN_SATUAN']}/`
-                            volume += `${dataSatuan[i]['SASARAN_VOLUME']}/`
+                            volume += `${parseFloat(dataSatuan[i]['SASARAN_VOLUME']).toFixed(2)}/`
                         }
                         skV1[index]['SASARAN_SATUAN'] = satuan.slice(0, -1);
                         skV1[index]['SASARAN_VOLUME'] = volume.slice(0, -1);
                         skV1[index]['KODE_KEGIATAN'] = `** ${skV1[index]['KODE_KEGIATAN']}`
                     } else {
                         skV1[index]['SASARAN_SATUAN'] = dataSatuan[0]['SASARAN_VOLUME'] != '0' ? dataSatuan[0]['SASARAN_SATUAN'] : '-'
-                        skV1[index]['SASARAN_VOLUME'] = dataSatuan[0]['SASARAN_VOLUME']
+                        skV1[index]['SASARAN_VOLUME'] = parseFloat(dataSatuan[0]['SASARAN_VOLUME']).toFixed(2)
                     }
                 }
 
@@ -562,7 +562,10 @@ const generateStrukturKegiatanService = async (revUid) => {
             console.log(`data struktur kegiatan : ${revUid} not found`)
         }
 
-        if (skV1.length > 0) await saveStrukturKegiatan(skV1, revUid)
+        // generate sub total
+        skV1 = await generateSubTotalStrukturKegiatan(skV1)
+        await t.rollback();
+        // if (skV1.length > 0) await saveStrukturKegiatan(skV1, revUid)
         console.log('end process save data struktur kegiatan')
     } catch (err) {
         await t.rollback();
@@ -633,6 +636,17 @@ const saveStrukturKegiatan = async (data, revUid) => {
         await t.rollback();
         throw new Error(err);
     }
+}
+
+const generateSubTotalStrukturKegiatan = (data) => {
+    let response = []
+    for (let index = 0; index < data.length; index++) {
+        if (data[index]['KODE_KEGIATAN'].length == 2) {
+
+        }
+        response.push(data[index])
+    }
+    return response
 }
 
 export {
