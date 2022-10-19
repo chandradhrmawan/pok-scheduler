@@ -523,11 +523,39 @@ const generateStrukturKegiatanService = async (revUid) => {
                         }
                         skV1[index]['SASARAN_SATUAN'] = satuan.slice(0, -1);
                         skV1[index]['SASARAN_VOLUME'] = volume.slice(0, -1);
-                        skV1[index]['KODE_KEGIATAN'] = `${skV1[index]['KODE_KEGIATAN']} **`
+                        skV1[index]['KODE_KEGIATAN'] = `** ${skV1[index]['KODE_KEGIATAN']}`
                     } else {
                         skV1[index]['SASARAN_SATUAN'] = dataSatuan[0]['SASARAN_VOLUME'] != '0' ? dataSatuan[0]['SASARAN_SATUAN'] : '-'
                         skV1[index]['SASARAN_VOLUME'] = dataSatuan[0]['SASARAN_VOLUME']
                     }
+                }
+
+                //kondisi khusus item OPERASIONAL PERKANTORAN
+                if (skV1[index]['NAMA_KEGIATAN'] == 'OPERASIONAL PERKANTORAN') {
+                    let kegiatanSplit = skV1[index]['KODE_KEGIATAN'].split('.')
+                    await db.query(`SELECT
+                        KDPPK1,
+                        KDPROGRAM1,
+                        KDGIAT1,
+                        KDPAKET1,
+                        LVL,
+                        KDIKAT,
+                        SUM(JMLIKAT1)/1000 as BELANJA_BARANG_OPERASIONAL
+                    from
+                        dbzd_po
+                    where
+                        D_POK_REVISION_UID = '${revUid}'
+                        and KDPPK1 = '${kegiatanSplit[0]}'
+                        and KDPROGRAM = '${kegiatanSplit[1]}'
+                        and KDGIAT1 = '${kegiatanSplit[2]}'
+                        and KDPAKET1 = '${kegiatanSplit[3]}'
+                        and TRIM(LVL) = '04'`, {
+                        plain: true,
+                        type: QueryTypes.SELECT,
+                    }).then(resp => {
+                        skV1[index]['BELANJA_BARANG_OPERASIONAL'] = resp['BELANJA_BARANG_OPERASIONAL']
+                        skV1[index]['JUMLAH_TOTAL'] = skV1[index]['BELANJA_BARANG_OPERASIONAL']
+                    })
                 }
             }
         } else {
@@ -553,38 +581,37 @@ const saveStrukturKegiatan = async (data, revUid) => {
         })
 
         console.log('process generate total data struktur kegiatan')
-        // await db.query(`insert into temp_struktur_kegiatan 
-        // select
-        //     null as ID,
-        //     POK_UID  as POK_UID,
-        //     REV_UID as REV_UID,
-        //     'AWAL' as STATUS,
-        //     '0' as STATUS_DATA,
-        //     null as KODE_KEGIATAN,
-        //     'JUMLAH TOTAL' as NAMA_KEGIATAN ,
-        //     null as SASARAN_VOLUME,
-        //     null as SASARAN_SATUAN ,
-        //     SUM(BELANJA_PEGAWAI_OPERASIONAL),
-        //     SUM(BELANJA_BARANG_OPERASIONAL),
-        //     SUM(BLNJ_BRG_NON_OP_NON_PEND),
-        //     SUM(BLNJ_BRG_NON_OP_PEND),
-        //     SUM(BLNJ_BRG_NON_OP_PHLN),
-        //     SUM(BLNJ_BRG_NON_OP_SBSN),
-        //     SUM(BELANJA_MODAL_OPERASIONAL),
-        //     SUM(BLNJ_MDL_NON_OP_NON_PEND),
-        //     SUM(BLNJ_MDL_NON_OP_PEND),
-        //     SUM(BLNJ_MDL_NON_OP_PHLN), 
-        //     SUM(BLNJ_MDL_NON_OP_SBSN),
-        //     SUM(JUMLAH_TOTAL),
-        //     'Y' as BOLD,
-        //     0 as PERIODE 
-        // from
-        //     temp_struktur_kegiatan trk
-        // where REV_UID = '${revUid}'
-        // and LENGTH(KODE_KEGIATAN) = '2'`, {
-        //     type: QueryTypes.INSERT,
-        //     transaction: t
-        // })
+        await db.query(`insert into temp_struktur_kegiatan 
+        select
+            null as ID,
+            POK_UID  as POK_UID,
+            REV_UID as REV_UID,
+            'AWAL' as STATUS,
+            '0' as STATUS_DATA,
+            null as KODE_KEGIATAN,
+            'JUMLAH TOTAL' as NAMA_KEGIATAN ,
+            null as SASARAN_VOLUME,
+            null as SASARAN_SATUAN ,
+            SUM(BELANJA_PEGAWAI_OPERASIONAL),
+            SUM(BELANJA_BARANG_OPERASIONAL),
+            SUM(BLNJ_BRG_NON_OP_NON_PEND),
+            SUM(BLNJ_BRG_NON_OP_PEND),
+            SUM(BLNJ_BRG_NON_OP_PHLN),
+            SUM(BLNJ_BRG_NON_OP_SBSN),
+            SUM(BELANJA_MODAL_OPERASIONAL),
+            SUM(BLNJ_MDL_NON_OP_NON_PEND),
+            SUM(BLNJ_MDL_NON_OP_PEND),
+            SUM(BLNJ_MDL_NON_OP_PHLN), 
+            SUM(BLNJ_MDL_NON_OP_SBSN),
+            SUM(JUMLAH_TOTAL),
+            'Y' as BOLD,
+            0 as PERIODE 
+        from
+            temp_struktur_kegiatan trk
+        where REV_UID = '${revUid}'`, {
+            type: QueryTypes.INSERT,
+            transaction: t
+        })
         await t.commit();
         return bulkSaveData
     } catch (err) {
