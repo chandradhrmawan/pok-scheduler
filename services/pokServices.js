@@ -563,9 +563,10 @@ const generateStrukturKegiatanService = async (revUid) => {
         }
 
         // generate sub total
-        skV1 = await generateSubTotalStrukturKegiatan(skV1)
-        await t.rollback();
-        // if (skV1.length > 0) await saveStrukturKegiatan(skV1, revUid)
+        // skV1 = await generateSubTotalStrukturKegiatan(skV1)
+        // await t.rollback();
+
+        if (skV1.length > 0) await saveStrukturKegiatan(skV1, revUid)
         console.log('end process save data struktur kegiatan')
     } catch (err) {
         await t.rollback();
@@ -647,6 +648,15 @@ const generateSubTotalStrukturKegiatan = (data) => {
         response.push(data[index])
     }
     return response
+}
+
+const getStrukturKegiatanService = async (revUid) => {
+    let dataSk = await tempStrukturKegiatan.findAll({
+        where: {
+            revUid: revUid
+        }
+    })
+    console.log(dataSk)
 }
 
 export {

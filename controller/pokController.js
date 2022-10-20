@@ -196,6 +196,16 @@ const generateStrukturKegiatan = async (req, res) => {
     }
 }
 
+const getStrukturKegiatan = async (req, res) => {
+    try {
+        let { revUid } = req.query
+        return res.status(statusCode.success).json(successMessage(await getStrukturKegiatanService(revUid)))
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.message))
+    }
+}
+
 export {
     getPok,
     postRencanaKerja,
@@ -206,5 +216,6 @@ export {
     generateLembarKontrol,
     printHtml,
     printHtmlPdf,
-    generateStrukturKegiatan
+    generateStrukturKegiatan,
+    getStrukturKegiatan
 }
