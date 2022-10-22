@@ -1,7 +1,7 @@
 import { errorMessage, statusCode, successMessage } from "../helpers/statusHelpers.js"
 import {
     getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService, generateLembarService,
-    generateStrukturKegiatanService
+    generateStrukturKegiatanService, getStrukturKegiatanService
 } from "../services/pokServices.js";
 import ejs from 'ejs'
 import path from 'path'

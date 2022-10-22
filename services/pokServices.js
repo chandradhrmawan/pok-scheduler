@@ -380,7 +380,7 @@ const generateLembarService = async (data) => {
 }
 
 const generateStrukturKegiatanService = async (revUid) => {
-    const t = await db.transaction();
+    // const t = await db.transaction();
     try {
         let skExsist = await db.query(`select COUNT(*) as jml from temp_struktur_kegiatan trk where REV_UID = '${revUid}'`, {
             plain: true,
@@ -391,9 +391,9 @@ const generateStrukturKegiatanService = async (revUid) => {
             console.log(`data struktur kegiatan : ${revUid} already exsist`)
             console.log(`delete temp_struktur_kegiatan revUid : ${revUid}`)
             await db.query(`DELETE from temp_struktur_kegiatan WHERE REV_UID = '${revUid}'`, {
-                transaction: t
+                // transaction: t
             })
-            await t.commit();
+            // await t.commit();
         }
 
         console.log(`start process generate temp_struktur_kegiatan data`)
@@ -404,7 +404,7 @@ const generateStrukturKegiatanService = async (revUid) => {
 
         if (skV1.length > 0) {
             for (let index = 0; index < skV1.length; index++) {
-                // console.log(skV1[index]['KODE_KEGIATAN'])
+                console.log(`process generate data sk :  ${skV1[index]['KODE_KEGIATAN']}`)
                 if (skV1[index]['KODE_KEGIATAN'].length == 2) {
                     await db.query(`select
                         a.KDPPK1,
@@ -500,7 +500,6 @@ const generateStrukturKegiatanService = async (revUid) => {
                     })
                 }
 
-
                 //generate sasaran satuan untuk level 4 dan 5
                 skV1[index]['SASARAN_SATUAN'] = '-'
                 skV1[index]['SASARAN_VOLUME'] = '-'
@@ -569,21 +568,105 @@ const generateStrukturKegiatanService = async (revUid) => {
         if (skV1.length > 0) await saveStrukturKegiatan(skV1, revUid)
         console.log('end process save data struktur kegiatan')
     } catch (err) {
-        await t.rollback();
+        // await t.rollback();
         console.log(err)
         throw new Error(err.stack);
     }
 }
 
 const saveStrukturKegiatan = async (data, revUid) => {
-    const t = await db.transaction();
+    // const t = await db.transaction();
     try {
         console.log('process save struktur kegiatan')
         let bulkSaveData = await tempStrukturKegiatan.bulkCreate(data, {
             returning: true,
-            transaction: t
+            // transaction: t
+        })
+        // await t.commit();
+
+        //re insert dengan sub total per kdppk1
+        let kdppk1Arr = await db.query(`select DISTINCT(KDPPK1) AS KDPPK1 
+        FROM temp_struktur_kegiatan where
+        REV_UID = '${revUid}'
+        and KDPPK1 is not null`, {
+            plain: false,
+            type: QueryTypes.SELECT,
         })
 
+        let resultFinal = []
+        for (let index = 0; index < kdppk1Arr.length; index++) {
+
+            //create body data
+            let data1 = await db.query(`select * from temp_struktur_kegiatan where REV_UID = '${revUid}' 
+            and KDPPK1 = '${kdppk1Arr[index]['KDPPK1']}'`, {
+                plain: false,
+                type: QueryTypes.SELECT,
+            })
+
+            // push body data
+            let arrBody = []
+            for (let index2 = 0; index2 < data1.length; index2++) {
+                data1[index2]['ID'] = null
+                arrBody.push(data1[index2])
+            }
+
+
+            //create sub total data
+            let data2 = await db.query(`select
+                null as ID,
+                POK_UID  as POK_UID,
+                REV_UID as REV_UID,
+                'AWAL' as STATUS,
+                '0' as STATUS_DATA,
+                null as KODE_KEGIATAN,
+                'SUB TOTAL PELAKSANAAN KEGIATAN' as NAMA_KEGIATAN ,
+                null as SASARAN_VOLUME,
+                null as SASARAN_SATUAN ,
+                SUM(BELANJA_PEGAWAI_OPERASIONAL) AS BELANJA_PEGAWAI_OPERASIONAL,
+                SUM(BELANJA_BARANG_OPERASIONAL) AS BELANJA_BARANG_OPERASIONAL,
+                SUM(BLNJ_BRG_NON_OP_NON_PEND) AS BLNJ_BRG_NON_OP_NON_PEND,
+                SUM(BLNJ_BRG_NON_OP_PEND) AS BLNJ_BRG_NON_OP_PEND,
+                SUM(BLNJ_BRG_NON_OP_PHLN) AS BLNJ_BRG_NON_OP_PHLN,
+                SUM(BLNJ_BRG_NON_OP_SBSN) AS BLNJ_BRG_NON_OP_SBSN,
+                SUM(BELANJA_MODAL_OPERASIONAL) AS BELANJA_MODAL_OPERASIONAL,
+                SUM(BLNJ_MDL_NON_OP_NON_PEND) AS BLNJ_MDL_NON_OP_NON_PEND,
+                SUM(BLNJ_MDL_NON_OP_PEND) AS BLNJ_MDL_NON_OP_PEND,
+                SUM(BLNJ_MDL_NON_OP_PHLN) AS BLNJ_MDL_NON_OP_PHLN, 
+                SUM(BLNJ_MDL_NON_OP_SBSN) AS BLNJ_MDL_NON_OP_SBSN,
+                SUM(JUMLAH_TOTAL) AS JUMLAH_TOTAL,
+                'Y' as BOLD,
+                0 as PERIODE,
+                null as KDPPK1
+            from
+                temp_struktur_kegiatan
+            where
+                REV_UID = '${revUid}'
+            AND KDPPK1 = '${kdppk1Arr[index]['KDPPK1']}'`, {
+                plain: true,
+                type: QueryTypes.SELECT,
+            })
+            // resultFinal.push(data2)
+            arrBody.push(data2)
+            resultFinal = resultFinal.concat(arrBody)
+        }
+
+
+        //delete temp_sk
+        await db.query(`DELETE from temp_struktur_kegiatan WHERE REV_UID = '${revUid}'`, {
+            // transaction: t
+        })
+        // await t.commit();
+
+        console.log(resultFinal)
+
+        console.log('process save struktur kegiatan final')
+        let bulkSaveData2 = await tempStrukturKegiatan.bulkCreate(resultFinal, {
+            returning: true,
+            // transaction: t
+        })
+        // await t.commit();
+
+        // get nama satker
         let nmSatker = "";
         await db.query(`select
             c.NMSATKER 
@@ -599,7 +682,7 @@ const saveStrukturKegiatan = async (data, revUid) => {
             nmSatker = resp1['NMSATKER']
         })
 
-        console.log('process generate total data struktur kegiatan')
+        // console.log('process generate total data struktur kegiatan')
         await db.query(`insert into temp_struktur_kegiatan 
         select
             null as ID,
@@ -624,39 +707,63 @@ const saveStrukturKegiatan = async (data, revUid) => {
             SUM(BLNJ_MDL_NON_OP_SBSN),
             SUM(JUMLAH_TOTAL),
             'Y' as BOLD,
-            0 as PERIODE 
+            0 as PERIODE,
+            null as KDPPK1
         from
             temp_struktur_kegiatan trk
-        where REV_UID = '${revUid}'`, {
-            type: QueryTypes.INSERT,
-            transaction: t
+        where REV_UID = '${revUid}'
+        and KODE_KEGIATAN IS NULL`, {
+            type: QueryTypes.INSERT
         })
-        await t.commit();
+        // await t.commit();
         return bulkSaveData
     } catch (err) {
-        await t.rollback();
+        // await t.rollback();
         throw new Error(err);
     }
 }
 
-const generateSubTotalStrukturKegiatan = (data) => {
+const generateSubTotalStrukturKegiatan = async (data) => {
     let response = []
     for (let index = 0; index < data.length; index++) {
-        if (data[index]['KODE_KEGIATAN'].length == 2) {
+        // if(data[index]['KODE_KEGIATAN'])
+        // console.log(data[index]['KODE_KEGIATAN']);
 
-        }
-        response.push(data[index])
+        // response.push(data[index])
+
+
+        let splitKdppk = data[index]['KODE_KEGIATAN']?.split('.');
+        console.log(splitKdppk)
+
+
+        let first = splitKdppk[0]
+
+        // if(first)
+
+
+        // if(splitKdppk)
     }
-    return response
+
+    // let kdppk1 = data.filter(e => e['KODE_KEGIATAN']?.length == 2)
+    // console.log(kdppk1)
+
+    // for (let index = 0; index < kdppk1.length; index++) {
+    //     console.log(index)
+
+    // }
+
+    // return kdppk1
 }
 
 const getStrukturKegiatanService = async (revUid) => {
     let dataSk = await tempStrukturKegiatan.findAll({
         where: {
-            revUid: revUid
+            REV_UID: revUid
         }
     })
-    console.log(dataSk)
+
+    let response = await generateSubTotalStrukturKegiatan(dataSk)
+    return response
 }
 
 export {
@@ -667,5 +774,6 @@ export {
     uploadedPokService,
     approvedPokService,
     generateLembarService,
-    generateStrukturKegiatanService
+    generateStrukturKegiatanService,
+    getStrukturKegiatanService
 }

@@ -118,6 +118,11 @@ const tempStrukturKegiatan = db.define('tempStrukturKegiatan', {
         type: Sequelize.STRING,
         field: 'PERIODE',
         allowNull: true
+    },
+    KDPPK1: {
+        type: Sequelize.STRING,
+        field: 'KDPPK1',
+        allowNull: true
     }
 }, {
     tableName: 'temp_struktur_kegiatan',
