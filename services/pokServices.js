@@ -1,10 +1,14 @@
 import { db, QueryTypes } from "../config/database/database.js"
 import {
     rencanaKerja1,
-    strukturKegiatan1
+    strukturKegiatan1,
+    lembarKontrolPenRo,
+    getDataLembarKontrol1
 } from "../models/rawQuery.js";
 import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
 import { tempStrukturKegiatan } from "../models/tempStrukturKegiatan.js";
+import { dLembarKontrol1 } from "../models/dLembarKontrol1.js";
+import { dLembarKontrolPenRo } from "../models/dLembarKontrolPenRo.js";
 import axios from "axios";
 
 
@@ -375,8 +379,83 @@ const approvedPokService = async (data) => {
     }
 }
 
-const generateLembarService = async (data) => {
-    console.log('sini')
+const generateLembarService = async (revUid) => {
+    try {
+        let isExsist = await dLembarKontrol1.findOne({ where: { D_POK_REVISION_UID: revUid } })
+        if (isExsist) {
+            console.log(`data d_lembar_kontrol_1 : ${revUid} already exsist`)
+            return true
+            // delete d_lembar_kontrol_1
+        }
+
+        let tampilan1 = [{
+            no: '6',
+            item: 'ALOKASI BIAYA BELANJA OPERASIONAL & NON OPERASIONAL'
+        },
+        {
+            no: '7',
+            item: 'Paket-paket MYC (Rp.PDP+PLN)'
+        },
+        {
+            no: '',
+            item: '- PHLN'
+        },
+        {
+            no: '',
+            item: '- Pendamping'
+        },
+        {
+            no: 'B',
+            item: 'Paket-paket MYC (APBN)'
+        },
+        {
+            no: '8',
+            item: 'Blokir Non MYC + Blokir MYC LOAN + Blokir MYC Non LOAN'
+        },
+        {
+            no: 'A',
+            item: 'Blokir Non MYC'
+        },
+        {
+            no: 'B',
+            item: 'Blokir MYC LOAN'
+        },
+        {
+            no: 'C',
+            item: 'Blokir MYC Non LOAN'
+        }];
+        // generate d_lembar_kontrol
+        let vieName = ['v_cl1_09_14', 'v_cl1_15', 'v_cl1_16', 'v_cl1_17', 'v_cl1_18', 'v_cl1_19', 'v_cl1_20', 'v_cl1_21', 'v_cl1_22', 'v_cl1_23']
+        for (let index = 0; index < vieName.length; index++) {
+            let data1 = await db.query(getDataLembarKontrol1(vieName[index], revUid), {
+                plain: false,
+                type: QueryTypes.SELECT,
+            })
+            console.log(data1)
+            console.log(`proces view : ${vieName[index]}`)
+            await dLembarKontrol1.bulkCreate(data1)
+        }
+
+
+        let isExsist2 = await dLembarKontrolPenRo.findOne({ where: { D_POK_REVISION_UID: revUid } })
+        if (isExsist2) {
+            console.log(`data pen ro : ${revUid} already exsist`)
+            return true
+            // delete d_lembar_kontrol_1
+        }
+
+        let data2 = await db.query(lembarKontrolPenRo(revUid), {
+            plain: false,
+            type: QueryTypes.SELECT,
+        })
+        console.log(data2)
+        console.log(`proces view pen ro : ${revUid}`)
+        await dLembarKontrolPenRo.bulkCreate(data2)
+
+        console.log(`proces complete`)
+    } catch (err) {
+        console.log(err)
+    }
 }
 
 const generateStrukturKegiatanService = async (revUid) => {

@@ -223,7 +223,486 @@ group by
     b.STATUS_DATA`
 }
 
+const lembarKontrolPenRo = (revUid) => {
+    const query = `select
+    rev.POK_UID AS POK_UID,
+    dpo.D_POK_REVISION_UID AS D_POK_REVISION_UID,
+    max(dpo.STATUS) AS STATUS,
+    dpo.KDSATKER AS KDSATKER,
+    concat(dpo.KDOUTPUT, '.', dpo.KDSOUTPUT, ' - ', sout.NMSOUTPUT) AS NAMA_RINCIAN_OUTPUT,
+    ucase(do.SAT) AS SATUAN,
+    case
+        when ds.PERIODE = 0 then ifnull(SAPSK_VOL.VAL, 0)
+        else ifnull(AKHIR0_VOL.VAL, 0)
+    end AS AWAL_VOL,
+    case
+        when ds.PERIODE = 0 then ifnull(SAPSK_RPM.VAL, 0)
+        else ifnull(AKHIR0_RPM.VAL, 0)
+    end AS AWAL_RPM,
+    case
+        when ds.PERIODE = 0 then ifnull(SAPSK_PHLN.VAL, 0)
+        else ifnull(AKHIR0_PHLN.VAL, 0)
+    end AS AWAL_PHLN,
+    case
+        when ds.PERIODE = 0 then ifnull(SAPSK_BLOKIR.VAL, 0)
+        else ifnull(AKHIR0_BLOKIR.VAL, 0)
+    end AS AWAL_BLOKIR,
+    case
+        when ds.PERIODE = 0 then ifnull(SAPSK_SBSN.VAL, 0)
+        else ifnull(AKHIR0_SBSN.VAL, 0)
+    end AS AWAL_SBSN,
+    case
+        when ds.PERIODE = 0 then ifnull(SAPSK_RPM.VAL, 0) + ifnull(SAPSK_PHLN.VAL, 0) + ifnull(SAPSK_BLOKIR.VAL, 0) + ifnull(SAPSK_SBSN.VAL, 0)
+        else ifnull(AKHIR0_RPM.VAL, 0) + ifnull(AKHIR0_PHLN.VAL, 0) + ifnull(AKHIR0_BLOKIR.VAL, 0) + ifnull(AKHIR0_SBSN.VAL, 0)
+    end AS AWAL_JUMLAH,
+    case
+        when ds.PERIODE = 2 then ifnull(AKHIR1_VOL.VAL, 0)
+        when ds.PERIODE = 1 then ifnull(AKHIR_VOL.VAL, 0)
+        else NULL
+    end AS REVISI_1_VOL,
+    case
+        when ds.PERIODE = 2 then ifnull(AKHIR1_RPM.VAL, 0)
+        when ds.PERIODE = 1 then ifnull(AKHIR_RPM.VAL, 0)
+        else NULL
+    end AS REVISI_1_RPM,
+    case
+        when ds.PERIODE = 2 then ifnull(AKHIR1_PHLN.VAL, 0)
+        when ds.PERIODE = 1 then ifnull(AKHIR_PHLN.VAL, 0)
+        else NULL
+    end AS REVISI_1_PHLN,
+    case
+        when ds.PERIODE = 2 then ifnull(AKHIR1_BLOKIR.VAL, 0)
+        when ds.PERIODE = 1 then ifnull(AKHIR_BLOKIR.VAL, 0)
+        else NULL
+    end AS REVISI_1_BLOKIR,
+    case
+        when ds.PERIODE = 2 then ifnull(AKHIR1_SBSN.VAL, 0)
+        when ds.PERIODE = 1 then ifnull(AKHIR_SBSN.VAL, 0)
+        else NULL
+    end AS REVISI_1_SBSN,
+    case
+        when ds.PERIODE = 2 then ifnull(AKHIR1_RPM.VAL, 0) + ifnull(AKHIR1_PHLN.VAL, 0) + ifnull(AKHIR1_BLOKIR.VAL, 0) + ifnull(AKHIR1_SBSN.VAL, 0)
+        when ds.PERIODE = 1 then ifnull(AKHIR_RPM.VAL, 0) + ifnull(AKHIR_PHLN.VAL, 0) + ifnull(AKHIR_BLOKIR.VAL, 0) + ifnull(AKHIR_SBSN.VAL, 0)
+        else NULL
+    end AS REVISI_1_JUMLAH,
+    case
+        when ds.PERIODE in (0, 2) then ifnull(AKHIR_VOL.VAL, 0)
+        else NULL
+    end AS AKHIR_VOL,
+    case
+        when ds.PERIODE in (0, 2) then ifnull(AKHIR_RPM.VAL, 0)
+        else NULL
+    end AS AKHIR_RPM,
+    case
+        when ds.PERIODE in (0, 2) then ifnull(AKHIR_PHLN.VAL, 0)
+        else NULL
+    end AS AKHIR_PHLN,
+    case
+        when ds.PERIODE in (0, 2) then ifnull(AKHIR_BLOKIR.VAL, 0)
+        else NULL
+    end AS AKHIR_BLOKIR,
+    case
+        when ds.PERIODE in (0, 2) then ifnull(AKHIR_SBSN.VAL, 0)
+        else NULL
+    end AS AKHIR_SBSN,
+    case
+        when ds.PERIODE in (0, 2) then ifnull(AKHIR_RPM.VAL, 0) + ifnull(AKHIR_PHLN.VAL, 0) + ifnull(AKHIR_BLOKIR.VAL, 0) + ifnull(AKHIR_SBSN.VAL, 0)
+        else NULL
+    end AS AKHIR_JUMLAH,
+    dpo.KET AS KETERANGAN,
+    ds.PERIODE AS PERIODE
+from
+    ((((((((((((((((((((((((pok_online.dbzd_po dpo
+left join (
+    select
+        concat(sat.KDSATKER, sat.THANG, sat.KDOUTPUT, '.', sat.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(sat.VOLKEG), 2) AS VAL,
+        ucase(sat.SATKEG) AS SATKEG
+    from
+        pok_online.dbzd_po sat
+    where
+        sat.KDJNSBAN = '0'
+        AND sat.SATKEG in ('KM','M','DOKUMEN','LAYANAN')
+    group by
+        concat(sat.KDOUTPUT, '.', sat.KDSOUTPUT),
+        sat.KDSATKER,
+        sat.THANG) SAPSK_VOL on
+    (SAPSK_VOL.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and dpo.STATUS = 0
+        and SAPSK_VOL.SATKEG = dpo.SATKEG))
+left join (
+    select
+        concat(sat.KDSATKER, sat.THANG, sat.KDOUTPUT, '.', sat.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(sat.JMLIKAT + sat.JMLPDP + sat.JMLNPDP + sat.JMLHIBAH - (sat.RPHBLOKIR + sat.BLOKIRRMP + sat.BLOKIRRKP)), 0) AS VAL
+    from
+        pok_online.tr_satuan_3 sat
+    where
+        sat.KDBEBAN <> 'K'
+        and sat.KDJNSBAN = '0'
+    group by
+        concat(sat.KDOUTPUT, '.', sat.KDSOUTPUT),
+        sat.KDSATKER,
+        sat.THANG) SAPSK_RPM on
+    (SAPSK_RPM.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and dpo.STATUS = 0))
+left join (
+    select
+        concat(sat.KDSATKER, sat.THANG, sat.KDOUTPUT, '.', sat.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(sat.JMLIKAT + sat.JMLPDP + sat.JMLNPDP + sat.JMLHIBAH - (sat.RPHBLOKIR + sat.BLOKIRRMP + sat.BLOKIRRKP)), 0) AS VAL
+    from
+        pok_online.tr_satuan_3 sat
+    where
+        left(sat.KDAKUN,
+        2) in ('52', '53')
+            and sat.KDBEBAN = 'K'
+            and sat.KDJNSBAN = '0'
+        group by
+            concat(sat.KDOUTPUT, '.', sat.KDSOUTPUT),
+            sat.KDSATKER,
+            sat.THANG) SAPSK_SBSN on
+    (SAPSK_SBSN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and dpo.STATUS = 0))
+left join (
+    select
+        concat(sat.KDSATKER, sat.THANG, sat.KDOUTPUT, '.', sat.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(sat.JMLPLN), 0) AS VAL
+    from
+        pok_online.tr_satuan_3 sat
+    where
+        sat.KDBEBAN <> 'K'
+        and sat.KDJNSBAN = '0'
+    group by
+        concat(sat.KDOUTPUT, '.', sat.KDSOUTPUT),
+        sat.KDSATKER,
+        sat.THANG) SAPSK_PHLN on
+    (SAPSK_PHLN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and dpo.STATUS = 0))
+left join (
+    select
+        concat(sat.KDSATKER, sat.THANG, sat.KDOUTPUT, '.', sat.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(sat.RPHBLOKIR + sat.BLOKIRRMP + sat.BLOKIRRKP + sat.BLOKIRPHLN), 0) AS VAL
+    from
+        pok_online.tr_satuan_3 sat
+    group by
+        concat(sat.KDOUTPUT, '.', sat.KDSOUTPUT),
+        sat.KDSATKER,
+        sat.THANG) SAPSK_BLOKIR on
+    (SAPSK_BLOKIR.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and dpo.STATUS = 0))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.VOLKEG1), 2) AS VAL
+    from
+        pok_online.dbzd_po po
+    where
+        po.STATUS = 0
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR0_VOL on
+    (AKHIR0_VOL.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLIKAT + po.JMLPDP + po.JMLNPDP + po.JMLHIBAH - (po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP)) / 1000, 0) AS VAL
+    from
+        pok_online.dbzd_po po
+    where
+        po.KDBEBAN <> 'K'
+        and po.KDJNSBAN = '0'
+        and po.STATUS = 0
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR0_RPM on
+    (AKHIR0_RPM.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLIKAT + po.JMLPDP + po.JMLNPDP + po.JMLHIBAH - (po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP)) / 1000, 0) AS VAL
+    from
+        pok_online.dbzd_po po
+    where
+        left(po.KDAKUN,
+        2) in ('52', '53')
+            and po.KDBEBAN = 'K'
+            and po.KDJNSBAN = '0'
+            and po.STATUS = 0
+        group by
+            concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+            po.KDSATKER,
+            po.THANG,
+            po.D_POK_REVISION_UID) AKHIR0_SBSN on
+    (AKHIR0_SBSN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLPLN) / 1000, 0) AS VAL
+    from
+        pok_online.dbzd_po po
+    where
+        po.KDBEBAN <> 'K'
+        and po.KDJNSBAN = '0'
+        and po.STATUS = 0
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR0_PHLN on
+    (AKHIR0_PHLN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP + po.BLOKIRPHLN) / 1000, 0) AS VAL
+    from
+        pok_online.dbzd_po po
+    where
+        po.STATUS = 0
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR0_BLOKIR on
+    (AKHIR0_BLOKIR.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.VOLKEG1), 2) AS VAL
+    from
+        (pok_online.dbzd_po po
+    left join pok_online.v_periode_2 per on
+        (per.D_POK_REVISION_UID = po.D_POK_REVISION_UID))
+    where
+        po.STATUS = per.DS_STATUS
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR1_VOL on
+    (AKHIR1_VOL.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLIKAT + po.JMLPDP + po.JMLNPDP + po.JMLHIBAH - (po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP)) / 1000, 0) AS VAL
+    from
+        (pok_online.dbzd_po po
+    left join pok_online.v_periode_2 per on
+        (per.D_POK_REVISION_UID = po.D_POK_REVISION_UID))
+    where
+        po.STATUS = per.DS_STATUS
+        and po.KDBEBAN <> 'K'
+        and po.KDJNSBAN = '0'
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR1_RPM on
+    (AKHIR1_RPM.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLIKAT + po.JMLPDP + po.JMLNPDP + po.JMLHIBAH - (po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP)) / 1000, 0) AS VAL
+    from
+        (pok_online.dbzd_po po
+    left join pok_online.v_periode_2 per on
+        (per.D_POK_REVISION_UID = po.D_POK_REVISION_UID))
+    where
+        po.STATUS = per.DS_STATUS
+        and left(po.KDAKUN,
+        2) in ('52', '53')
+            and po.KDBEBAN = 'K'
+            and po.KDJNSBAN = '0'
+        group by
+            concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+            po.KDSATKER,
+            po.THANG,
+            po.D_POK_REVISION_UID) AKHIR1_SBSN on
+    (AKHIR1_SBSN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLPLN) / 1000, 0) AS VAL
+    from
+        (pok_online.dbzd_po po
+    left join pok_online.v_periode_2 per on
+        (per.D_POK_REVISION_UID = po.D_POK_REVISION_UID))
+    where
+        po.STATUS = per.DS_STATUS
+        and po.KDBEBAN <> 'K'
+        and po.KDJNSBAN = '0'
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR1_PHLN on
+    (AKHIR1_PHLN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP + po.BLOKIRPHLN) / 1000, 0) AS VAL
+    from
+        (pok_online.dbzd_po po
+    left join pok_online.v_periode_2 per on
+        (per.D_POK_REVISION_UID = po.D_POK_REVISION_UID))
+    where
+        po.STATUS = per.DS_STATUS
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID) AKHIR1_BLOKIR on
+    (AKHIR1_BLOKIR.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.VOLKEG1), 2) AS VAL,
+        max(po.STATUS) AS STATUS,
+        po.D_POK_REVISION_UID AS D_POK_REVISION_UID,
+        po.KDSATKER AS KDSATKER
+    from
+        pok_online.dbzd_po po
+    where
+        po.VOLKEG1 is not null
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID,
+        po.STATUS) AKHIR_VOL on
+    (AKHIR_VOL.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and AKHIR_VOL.STATUS = dpo.STATUS))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLIKAT + po.JMLPDP + po.JMLNPDP + po.JMLHIBAH - (po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP)) / 1000, 0) AS VAL,
+        max(po.STATUS) AS STATUS,
+        po.D_POK_REVISION_UID AS D_POK_REVISION_UID,
+        po.KDSATKER AS KDSATKER
+    from
+        pok_online.dbzd_po po
+    where
+        po.KDBEBAN <> 'K'
+        and po.KDJNSBAN = '0'
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID,
+        po.STATUS) AKHIR_RPM on
+    (AKHIR_RPM.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and AKHIR_RPM.STATUS = dpo.STATUS))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLIKAT + po.JMLPDP + po.JMLNPDP + po.JMLHIBAH - (po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP)) / 1000, 0) AS VAL,
+        max(po.STATUS) AS STATUS,
+        po.D_POK_REVISION_UID AS D_POK_REVISION_UID,
+        po.KDSATKER AS KDSATKER
+    from
+        pok_online.dbzd_po po
+    where
+        left(po.KDAKUN,
+        2) in ('52', '53')
+            and po.KDBEBAN = 'K'
+            and po.KDJNSBAN = '0'
+        group by
+            concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+            po.KDSATKER,
+            po.THANG,
+            po.D_POK_REVISION_UID,
+            po.STATUS) AKHIR_SBSN on
+    (AKHIR_SBSN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and AKHIR_SBSN.STATUS = dpo.STATUS))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.JMLPLN) / 1000, 0) AS VAL,
+        max(po.STATUS) AS STATUS,
+        po.D_POK_REVISION_UID AS D_POK_REVISION_UID,
+        po.KDSATKER AS KDSATKER
+    from
+        pok_online.dbzd_po po
+    where
+        po.KDBEBAN <> 'K'
+        and po.KDJNSBAN = '0'
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID,
+        po.STATUS) AKHIR_PHLN on
+    (AKHIR_PHLN.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and AKHIR_PHLN.STATUS = dpo.STATUS))
+left join (
+    select
+        concat(po.KDSATKER, po.THANG, po.KDOUTPUT, '.', po.KDSOUTPUT) AS IDENTIFIER,
+        round(sum(po.RPHBLOKIR + po.BLOKIRRMP + po.BLOKIRRKP + po.BLOKIRPHLN) / 1000, 0) AS VAL,
+        max(po.STATUS) AS STATUS,
+        po.D_POK_REVISION_UID AS D_POK_REVISION_UID,
+        po.KDSATKER AS KDSATKER
+    from
+        pok_online.dbzd_po po
+    where
+        po.VOLKEG1 is not null
+    group by
+        concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
+        po.KDSATKER,
+        po.THANG,
+        po.D_POK_REVISION_UID,
+        po.STATUS) AKHIR_BLOKIR on
+    (AKHIR_BLOKIR.IDENTIFIER = concat(dpo.KDSATKER, dpo.THANG, dpo.KDOUTPUT, '.', dpo.KDSOUTPUT)
+        and AKHIR_BLOKIR.STATUS = dpo.STATUS))
+left join pok_online.t_soutput sout on
+    (sout.THANG = dpo.THANG
+        and sout.KDPROGRAM = dpo.KDPROGRAM1
+        and sout.KDGIAT = dpo.KDGIAT1
+        and sout.KDOUTPUT = dpo.KDOUTPUT1
+        and sout.KDSOUTPUT = dpo.KDSOUTPUT1))
+left join pok_online.d_pok_revision rev on
+    (rev.UID = dpo.D_POK_REVISION_UID))
+left join pok_online.dbzt_output do on
+    (do.KDOUTPUT = dpo.KDOUTPUT))
+left join pok_online.dbzd_ds ds on
+    (ds.KDSATKER = dpo.KDSATKER
+        and ds.THANG = dpo.THANG
+        and ds.D_POK_REVISION_UID = dpo.D_POK_REVISION_UID
+        and ds.STATUS = dpo.STATUS))
+where
+    dpo.KDSATKER is not null
+    and concat(dpo.KDOUTPUT, '.', dpo.KDSOUTPUT, ' - ', sout.NMSOUTPUT) is not null
+    and dpo.D_POK_REVISION_UID = '${revUid}'
+group by
+    dpo.KDSATKER,
+    dpo.THANG,
+    concat(dpo.KDOUTPUT, '.', dpo.KDSOUTPUT, ' - ', sout.NMSOUTPUT),
+    ds.PERIODE
+order by
+    dpo.KDSATKER,
+    dpo.THANG,
+    dpo.STATUS,
+    concat(dpo.KDOUTPUT, '.', dpo.KDSOUTPUT, ' - ', sout.NMSOUTPUT)`
+    return query
+}
+
+const getDataLembarKontrol1 = (viewName, revUid) => {
+    let sql = `select  POK_UID, D_POK_REVISION_UID, STATUS, KDSATKER, NMSATKER, NMLOKASI, PROGRAM, NO_TGL_SP_DIPA, 
+    THANG, NAMA_RINCIAN_OUTPUT, NOMOR, AWAL_BLNJ_PEG_OP, AWAL_BRG_RM, AWAL_BRG_NON_OPR, 
+    AWAL_BRG_SBSN, AWAL_MDL_RM, AWAL_MDL_NON_OPR, AWAL_MDL_SBSN, AWAL_JUMLAH, 
+    REVISI_1_BLNJ_PEG_OP, REVISI_1_BRG_RM, REVISI_1_BRG_NON_OPR, 
+    REVISI_1_BRG_SBSN, REVISI_1_MDL_RM, REVISI_1_MDL_NON_OPR, 
+    REVISI_1_MDL_SBSN, REVISI_1_JUMLAH, AKHIR_BLNJ_PEG_OP, AKHIR_BRG_RM, 
+    AKHIR_BRG_NON_OPR, AKHIR_BRG_SBSN, AKHIR_MDL_RM, AKHIR_MDL_NON_OPR, 
+    AKHIR_MDL_SBSN, AKHIR_JUMLAH, KETERANGAN, SORT, PERIODE 
+    FROM ${viewName} where D_POK_REVISION_UID = '${revUid}'`
+    return sql
+}
+
 export {
+    getDataLembarKontrol1,
     rencanaKerja1,
-    strukturKegiatan1
+    strukturKegiatan1,
+    lembarKontrolPenRo
 }

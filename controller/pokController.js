@@ -97,11 +97,15 @@ const approvedPok = async (req, res) => {
 
 const generateLembarKontrol = async (req, res) => {
     try {
-        let data = req.query
-        let result = await generateLembarService(data);
+        let { revUid } = req.query
+        // let result = await generateLembarService(revUid);
+        setTimeout(async function () {
+            await generateLembarService(revUid);
+        }, 1000);
+
         return res.status(statusCode.success).json(successMessage())
     } catch (err) {
-        return res.status(statusCode.bad).json(errorMessage(err))
+        return res.status(statusCode.bad).json(errorMessage(err.toString()))
     }
 }
 
