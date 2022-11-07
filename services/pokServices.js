@@ -388,42 +388,7 @@ const generateLembarService = async (revUid) => {
             // delete d_lembar_kontrol_1
         }
 
-        let tampilan1 = [{
-            no: '6',
-            item: 'ALOKASI BIAYA BELANJA OPERASIONAL & NON OPERASIONAL'
-        },
-        {
-            no: '7',
-            item: 'Paket-paket MYC (Rp.PDP+PLN)'
-        },
-        {
-            no: '',
-            item: '- PHLN'
-        },
-        {
-            no: '',
-            item: '- Pendamping'
-        },
-        {
-            no: 'B',
-            item: 'Paket-paket MYC (APBN)'
-        },
-        {
-            no: '8',
-            item: 'Blokir Non MYC + Blokir MYC LOAN + Blokir MYC Non LOAN'
-        },
-        {
-            no: 'A',
-            item: 'Blokir Non MYC'
-        },
-        {
-            no: 'B',
-            item: 'Blokir MYC LOAN'
-        },
-        {
-            no: 'C',
-            item: 'Blokir MYC Non LOAN'
-        }];
+        console.log(`start process generate lembar kontrol`)
         // generate d_lembar_kontrol
         let vieName = ['v_cl1_09_14', 'v_cl1_15', 'v_cl1_16', 'v_cl1_17', 'v_cl1_18', 'v_cl1_19', 'v_cl1_20', 'v_cl1_21', 'v_cl1_22', 'v_cl1_23']
         for (let index = 0; index < vieName.length; index++) {
