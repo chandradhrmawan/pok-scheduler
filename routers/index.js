@@ -1,7 +1,14 @@
 import express from "express";
 import {
-    getPok, postRencanaKerja, deletePok, getPokF, uploadedPok, approvedPok, generateLembarKontrol,
-    printHtml, printHtmlPdf, generateStrukturKegiatan,getStrukturKegiatan
+    getPok,
+    postRencanaKerja,
+    deletePok,
+    getPokF,
+    uploadedPok,
+    approvedPok,
+    generateLembarKontrol,
+    generateStrukturKegiatan,
+    getStrukturKegiatan
 } from "../controller/pokController.js";
 const router = express.Router();
 
@@ -13,10 +20,6 @@ router.get('/pok/lembar-kontrol/generate', generateLembarKontrol);
 
 router.get('/pok/struktur-kegiatan/generate', generateStrukturKegiatan);
 router.get('/pok/struktur-kegiatan/get', getStrukturKegiatan);
-
-router.get('/printHtml', printHtml)
-
-router.get('/printHtmlPdf', printHtmlPdf)
 
 router.get('/pok/sidako/uploaded-pok', uploadedPok);
 router.get('/pok/sidako/approved-pok', approvedPok);
