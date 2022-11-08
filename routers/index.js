@@ -1,26 +1,31 @@
 import express from "express";
 import {
     getPok,
-    postRencanaKerja,
     deletePok,
-    getPokF,
     uploadedPok,
     approvedPok,
     generateLembarKontrol,
     generateStrukturKegiatan,
-    getStrukturKegiatan
+    regenerateReport,
+    generateLingkupKegiatan,
+    generateLingkupKegiatanBulk
 } from "../controller/pokController.js";
 const router = express.Router();
 
-router.get('/pok/get', getPok);
-router.get('/pok/rencana-kerja/sum-kode-kegiatan', getPokF);
-router.post('/rencana-kerja/save', postRencanaKerja);
-router.delete('/pok/delete', deletePok);
-router.get('/pok/lembar-kontrol/generate', generateLembarKontrol);
-
-router.get('/pok/struktur-kegiatan/generate', generateStrukturKegiatan);
-router.get('/pok/struktur-kegiatan/get', getStrukturKegiatan);
-
+//send data to sidako
 router.get('/pok/sidako/uploaded-pok', uploadedPok);
 router.get('/pok/sidako/approved-pok', approvedPok);
+
+//generate report pok
+router.get('/pok/get', getPok);
+router.get('/pok/lembar-kontrol/generate', generateLembarKontrol);
+router.get('/pok/struktur-kegiatan/generate', generateStrukturKegiatan);
+router.get('/pok/lingkup-kegiatan/generate', generateLingkupKegiatan);
+
+//check no row data
+router.get('/pok/regenerate/:tipe', regenerateReport);
+router.get('/pok/lingkup-kegiatan/bulkGenerate', generateLingkupKegiatanBulk);
+
+//delete data pok
+router.delete('/pok/delete', deletePok);
 export { router }

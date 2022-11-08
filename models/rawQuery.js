@@ -700,9 +700,115 @@ const getDataLembarKontrol1 = (viewName, revUid) => {
     return sql
 }
 
+const getDataLingkupKegiatan = (revUid) => {
+    return `select * from v_3_lingkup_kegiatan where REV_UID = '${revUid}'`
+}
+
+const getDataLingkupKegiatanHdr = (revUid) => {
+    return `select
+        KODE_KEGIATAN 
+    from
+        v_3_lingkup_kegiatan
+    where
+        REV_UID = '${revUid}'
+    AND LENGTH (KODE_KEGIATAN) = 2 
+    order by KODE_KEGIATAN ASC`
+}
+
+const getDataLingkupKegiatanDtl = (revUid, kodeKegiatan) => {
+    return `select
+        * 
+    from
+        v_3_lingkup_kegiatan
+    where
+        REV_UID = '${revUid}'
+        and KODE_KEGIATAN like '${kodeKegiatan}%'
+        order by KODE_KEGIATAN ASC`
+}
+
+const getDataLingkupKegiatanSubTotal = (revUid, kodeKegiatan) => {
+    return `select
+    UID,
+    POK_UID,
+    REV_UID,
+    STATUS,
+    STATUS_DATA,
+    NULL AS LVL,
+    NULL AS KODE_KEGIATAN,
+    'Sub Total Pelaksanaan Kegiatan' AS NAMA_KEGIATAN,
+    NULL AS LOKASI_KEGIATAN ,
+    NULL AS SUMBER_DANA ,
+    SUM(ALOKASI_DANA) AS ALOKASI_DANA,
+    SUM(SASARAN_VOLUME_SNF) AS SASARAN_VOLUME_SNF,
+    NULL AS SASARAN_VOLUME ,
+    NULL AS SASARAN_SATUAN ,
+    NULL AS NOMOR_RUAS ,
+    NULL AS PANJANG_RUAS ,
+    NULL AS STS_JALAN ,
+    NULL AS INDIKASI_LOKASI_NAMA_JEMBATAN ,
+    NULL AS KOORDINAT_X_AWAL,
+    NULL AS KOORDINAT_X_AKHIR,
+    NULL AS KOORDINAT_Y_AWAL,
+    NULL AS KOORDINAT_Y_AKHIR ,
+    NULL AS PANJANG_PENANGANAN ,
+    NULL AS LEBAR_PENANGANAN,
+    NULL AS JENIS_PENANGANAN ,
+    NULL AS KET_REVISI ,
+    NULL AS BOLD,
+    NULL AS PERIODE
+    from
+        v_3_lingkup_kegiatan
+    where
+        REV_UID = '${revUid}'
+        and KODE_KEGIATAN like '${kodeKegiatan}%'`
+}
+
+const getDataLingkupKegiatanGrandTotal = (revUid,nmSatker) => {
+    return `
+    select
+    UID,
+    POK_UID,
+    REV_UID,
+    STATUS,
+    STATUS_DATA,
+    NULL AS LVL,
+    NULL AS KODE_KEGIATAN,
+    'TOTAL ${nmSatker}' AS NAMA_KEGIATAN,
+    NULL AS LOKASI_KEGIATAN ,
+    NULL AS SUMBER_DANA ,
+    SUM(ALOKASI_DANA) AS ALOKASI_DANA,
+    SUM(SASARAN_VOLUME_SNF) AS SASARAN_VOLUME_SNF,
+    NULL AS SASARAN_VOLUME ,
+    NULL AS SASARAN_SATUAN ,
+    NULL AS NOMOR_RUAS ,
+    NULL AS PANJANG_RUAS ,
+    NULL AS STS_JALAN ,
+    NULL AS INDIKASI_LOKASI_NAMA_JEMBATAN ,
+    NULL AS KOORDINAT_X_AWAL,
+    NULL AS KOORDINAT_X_AKHIR,
+    NULL AS KOORDINAT_Y_AWAL,
+    NULL AS KOORDINAT_Y_AKHIR ,
+    NULL AS PANJANG_PENANGANAN ,
+    NULL AS LEBAR_PENANGANAN,
+    NULL AS JENIS_PENANGANAN ,
+    NULL AS KET_REVISI ,
+    NULL AS BOLD,
+    NULL AS PERIODE
+    from
+        temp_lingkup_kegiatan a
+    where
+        REV_UID = '${revUid}'
+        and KODE_KEGIATAN is null`
+}
+
 export {
     getDataLembarKontrol1,
     rencanaKerja1,
     strukturKegiatan1,
-    lembarKontrolPenRo
+    lembarKontrolPenRo,
+    getDataLingkupKegiatan,
+    getDataLingkupKegiatanHdr,
+    getDataLingkupKegiatanDtl,
+    getDataLingkupKegiatanSubTotal,
+    getDataLingkupKegiatanGrandTotal
 }

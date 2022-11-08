@@ -3,12 +3,19 @@ import {
     rencanaKerja1,
     strukturKegiatan1,
     lembarKontrolPenRo,
-    getDataLembarKontrol1
+    getDataLembarKontrol1,
+    getDataLingkupKegiatan,
+    getDataLingkupKegiatanHdr,
+    getDataLingkupKegiatanDtl,
+    getDataLingkupKegiatanSubTotal,
+    getDataLingkupKegiatanGrandTotal
 } from "../models/rawQuery.js";
 import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
 import { tempStrukturKegiatan } from "../models/tempStrukturKegiatan.js";
 import { dLembarKontrol1 } from "../models/dLembarKontrol1.js";
 import { dLembarKontrolPenRo } from "../models/dLembarKontrolPenRo.js";
+import { tempLingkupKegiatan } from "../models/tempLingkupKegiatan.js";
+import { select } from "../helpers/generalHelpers.js";
 import axios from "axios";
 
 
@@ -246,36 +253,6 @@ const delPok = async (data) => {
                 console.log(`err d_pok uid : ${data[i]['pokUid']}`)
             }
         }
-    }
-}
-
-const getDataPokF = async (revUid, kodeKegiatan) => {
-    try {
-        let ret;
-        await db.query(`CALL f_multi('${revUid}','${kodeKegiatan}',@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12)`, {
-        }).then(async (resp) => {
-            await db.query(`SELECT 
-                            @2 AS R_TOTAL_BLNJ_BRG_NON_OP_NON_PEND,
-                            @3 AS R_TOTAL_BELANJA_PEGAWAI_OPERASIONAL,
-                            @4 AS R_TOTAL_BELANJA_BARANG_OPERASIONAL,
-                            @5 AS R_TOTAL_BLNJ_BRG_NON_OP_PEND,
-                            @6 AS R_TOTAL_BLNJ_BRG_NON_OP_PHLN,
-                            @7 AS R_TOTAL_BLNJ_BRG_NON_OP_SBSN,
-                            @8 AS R_TOTAL_BELANJA_MODAL_OPERASIONAL,
-                            @9 AS R_TOTAL_BLNJ_MDL_NON_OP_NON_PEND,
-                            @10 AS R_TOTAL_BLNJ_MDL_NON_OP_PEND,
-                            @11 AS R_TOTAL_BLNJ_MDL_NON_OP_PHLN,
-                            @12 AS R_TOTAL_BLNJ_MDL_NON_OP_SBSN`, {
-                plain: true,
-                type: QueryTypes.SELECT,
-            }).then(async (resp1) => {
-                ret = resp1
-            })
-        })
-        return ret
-    } catch (err) {
-        console.log(err)
-        throw new Error(err.stack);
     }
 }
 
@@ -767,57 +744,116 @@ const saveStrukturKegiatan = async (data, revUid) => {
     }
 }
 
-const generateSubTotalStrukturKegiatan = async (data) => {
-    let response = []
-    for (let index = 0; index < data.length; index++) {
-        // if(data[index]['KODE_KEGIATAN'])
-        // console.log(data[index]['KODE_KEGIATAN']);
-
-        // response.push(data[index])
-
-
-        let splitKdppk = data[index]['KODE_KEGIATAN']?.split('.');
-        console.log(splitKdppk)
-
-
-        let first = splitKdppk[0]
-
-        // if(first)
-
-
-        // if(splitKdppk)
-    }
-
-    // let kdppk1 = data.filter(e => e['KODE_KEGIATAN']?.length == 2)
-    // console.log(kdppk1)
-
-    // for (let index = 0; index < kdppk1.length; index++) {
-    //     console.log(index)
-
-    // }
-
-    // return kdppk1
-}
-
-const getStrukturKegiatanService = async (revUid) => {
-    let dataSk = await tempStrukturKegiatan.findAll({
-        where: {
-            REV_UID: revUid
-        }
+const regenerateReportLembarKontrol = async () => {
+    let dataReport = await db.query(`
+    select x.* from (
+        select
+            a.SATKER_UID,
+            b.KDSATKER,
+            c.UID AS REV_UID,
+            (select count (*) from d_lembar_kontrol_1 where D_POK_REVISION_UID = c.UID) AS JML
+        from
+            d_pok a
+            join dbzt_satker b on a.SATKER_UID = b.UID 
+            join d_pok_revision c on c.POK_UID  = a.UID) x
+        where x.jml = 0`, {
+        plain: false,
+        type: QueryTypes.SELECT,
     })
 
-    let response = await generateSubTotalStrukturKegiatan(dataSk)
-    return response
+    console.log(dataReport)
+
+    Promise.all([
+        await generateLembarService('d53a86aa-65b3-4baf-a4a4-e508a3081c35'),
+        await generateLembarService('a0564936-a726-48c1-a41f-bc66450ef679'),
+    ]).then(resp => {
+        console.log('finished all promises')
+    })
+
+}
+
+const generateLingkupKegiatanService = async (revUid) => {
+    try {
+
+        let isExsist = await tempLingkupKegiatan.count({ where: { REV_UID: revUid } })
+        if (isExsist > 0) {
+            console.log(`data lingkup kegiatan uid : ${revUid} already exsist`)
+            return
+        }
+
+        console.log(`start proces generate data lingkup kegiatan uid : ${revUid}`)
+        let dataLingkupKegiatanHdr = await select(getDataLingkupKegiatanHdr(revUid))
+
+        let resultData = []
+        for (let index = 0; index < dataLingkupKegiatanHdr.length; index++) {
+            let detailData = await select(getDataLingkupKegiatanDtl(revUid, dataLingkupKegiatanHdr[index]['KODE_KEGIATAN']))
+
+            if (detailData.length > 0) {
+                for (let indexDtl = 0; indexDtl < detailData.length; indexDtl++) {
+                    resultData.push(detailData[indexDtl])
+                }
+
+                let subTotal = await select(getDataLingkupKegiatanSubTotal(revUid, dataLingkupKegiatanHdr[index]['KODE_KEGIATAN']), true)
+                if (subTotal) resultData.push(subTotal)
+            }
+        }
+
+        // save dtl data lingkup kegiatan
+        await tempLingkupKegiatan.bulkCreate(resultData)
+
+        // generate total data lingkup kegiatan
+        let dataSatker = await getPokSatkerInfo(revUid)
+        let grandTotal = await select(getDataLingkupKegiatanGrandTotal(revUid, dataSatker['NMSATKER']), true)
+        if (grandTotal) await tempLingkupKegiatan.create(grandTotal)
+
+        console.log(`proces generate data lingkup kegiatan uid : ${revUid} complete`)
+
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+const getPokSatkerInfo = async (revUid) => {
+    let sql = `select
+        c.KDSATKER,
+        c.NMSATKER 
+    from
+        d_pok_revision a
+        join d_pok b on a.POK_UID = b.uid
+        join dbzt_satker c on c.UID = b.SATKER_UID 
+    where
+        a.UID = '${revUid}'`
+    return await select(sql, true)
+}
+
+const generateLingkupKegiatanBulkService = async () => {
+    let sql = `select x.* from (
+        select
+            a.SATKER_UID,
+            b.KDSATKER,
+            c.UID AS REV_UID,
+            (select count (*) from temp_lingkup_kegiatan tlk  where REV_UID = c.UID) AS JML
+        from
+            d_pok a
+            join dbzt_satker b on a.SATKER_UID = b.UID 
+            join d_pok_revision c on c.POK_UID  = a.UID) x
+        where x.jml = 0`
+    let dataReport = await select(sql)
+    for (let index = 0; index < dataReport.length; index++) {
+        await generateLingkupKegiatanService(dataReport[index]['REV_UID'])
+    }
+    console.log('finished')
 }
 
 export {
     getDataPok,
     saveRencanaKerja,
     delPok,
-    getDataPokF,
     uploadedPokService,
     approvedPokService,
     generateLembarService,
     generateStrukturKegiatanService,
-    getStrukturKegiatanService
+    regenerateReportLembarKontrol,
+    generateLingkupKegiatanService,
+    generateLingkupKegiatanBulkService
 }

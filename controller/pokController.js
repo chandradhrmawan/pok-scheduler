@@ -1,7 +1,14 @@
 import { errorMessage, statusCode, successMessage } from "../helpers/statusHelpers.js"
 import {
-    getDataPok, saveRencanaKerja, delPok, getDataPokF, uploadedPokService, approvedPokService, generateLembarService,
-    generateStrukturKegiatanService, getStrukturKegiatanService
+    getDataPok,
+    delPok,
+    uploadedPokService,
+    approvedPokService,
+    generateLembarService,
+    generateStrukturKegiatanService,
+    regenerateReportLembarKontrol,
+    generateLingkupKegiatanService,
+    generateLingkupKegiatanBulkService
 } from "../services/pokServices.js";
 import moment from "moment";
 moment.locale('id');
@@ -16,31 +23,6 @@ const getPok = async (req, res) => {
         return res.status(statusCode.success).json(successMessage())
     } catch (err) {
         console.log(err)
-        return res.status(statusCode.bad).json(errorMessage(err.message))
-    }
-}
-
-const getPokF = async (req, res) => {
-    try {
-
-        let revUid = 'c110bee2-9963-4e5c-99a4-ea105eddfe62'
-        let kodeKegiatan = '07.2409'
-
-        let response = await getDataPokF(revUid, kodeKegiatan);
-
-        return res.status(statusCode.success).json(successMessage(response))
-    } catch (err) {
-        console.log(err)
-        return res.status(statusCode.bad).json(errorMessage(err.message))
-    }
-}
-
-const postRencanaKerja = async (req, res) => {
-    try {
-        let data = req.body
-        let dataRk = await saveRencanaKerja(data);
-        return res.status(statusCode.success).json(successMessage(dataRk))
-    } catch (err) {
         return res.status(statusCode.bad).json(errorMessage(err.message))
     }
 }
@@ -111,10 +93,44 @@ const generateStrukturKegiatan = async (req, res) => {
     }
 }
 
-const getStrukturKegiatan = async (req, res) => {
+const regenerateReport = async (req, res) => {
+    try {
+        let tipeReport = req.params.tipe || 'lembar-kontrol'
+
+        if (tipeReport == 'lembar-kontrol') {
+            setTimeout(async function () {
+                await regenerateReportLembarKontrol();
+            }, 1000);
+        }
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.message))
+    }
+}
+
+const generateLingkupKegiatan = async (req, res) => {
     try {
         let { revUid } = req.query
-        return res.status(statusCode.success).json(successMessage(await getStrukturKegiatanService(revUid)))
+        setTimeout(async function () {
+            await generateLingkupKegiatanService(revUid);
+        }, 1000);
+
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.message))
+    }
+}
+
+const generateLingkupKegiatanBulk = async (req, res) => {
+    try {
+        let { revUid } = req.query
+        setTimeout(async function () {
+            await generateLingkupKegiatanBulkService(revUid);
+        }, 1000);
+
+        return res.status(statusCode.success).json(successMessage())
     } catch (err) {
         console.log(err)
         return res.status(statusCode.bad).json(errorMessage(err.message))
@@ -123,12 +139,12 @@ const getStrukturKegiatan = async (req, res) => {
 
 export {
     getPok,
-    postRencanaKerja,
     deletePok,
-    getPokF,
     uploadedPok,
     approvedPok,
     generateLembarKontrol,
     generateStrukturKegiatan,
-    getStrukturKegiatan
+    regenerateReport,
+    generateLingkupKegiatan,
+    generateLingkupKegiatanBulk
 }
