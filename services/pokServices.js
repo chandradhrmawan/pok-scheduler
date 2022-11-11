@@ -8,7 +8,10 @@ import {
     getDataLingkupKegiatanHdr,
     getDataLingkupKegiatanDtl,
     getDataLingkupKegiatanSubTotal,
-    getDataLingkupKegiatanGrandTotal
+    getDataLingkupKegiatanGrandTotal,
+    getDataRincianKegiatanHdr,
+    getSumDataRincianKegiatanDtl,
+    getGrandTotalRincianKegiatan
 } from "../models/rawQuery.js";
 import { tempRencanaKerja } from "../models/tempRencanaKerja.js";
 import { tempStrukturKegiatan } from "../models/tempStrukturKegiatan.js";
@@ -16,6 +19,7 @@ import { dLembarKontrol1 } from "../models/dLembarKontrol1.js";
 import { dLembarKontrolPenRo } from "../models/dLembarKontrolPenRo.js";
 import { tempLingkupKegiatan } from "../models/tempLingkupKegiatan.js";
 import { select } from "../helpers/generalHelpers.js";
+import { tempRincianKegiatan } from "../models/tempRincianKegiatan.js";
 import axios from "axios";
 
 
@@ -845,6 +849,45 @@ const generateLingkupKegiatanBulkService = async () => {
     console.log('finished')
 }
 
+const generateRincianKegiatanService = async (revUid) => {
+    try {
+
+        let isExsist = await tempRincianKegiatan.count({ where: { REV_UID: revUid } })
+        if (isExsist > 0) {
+            console.log(`data rincian kegiatan uid : ${revUid} already exsist`)
+            return
+        }
+
+        console.log(`start proces generate data rincian kegiatan uid : ${revUid}`)
+        let dataRincianKegiatanHdr = await select(getDataRincianKegiatanHdr(revUid))
+
+        let resultData = []
+        for (let index = 0; index < dataRincianKegiatanHdr.length; index++) {
+            console.log(`${dataRincianKegiatanHdr[index]['KODE_KEGIATAN']}`)
+
+            if (dataRincianKegiatanHdr[index]['NOITEM1'] == '0') {
+                let detailData = await select(getSumDataRincianKegiatanDtl(revUid, dataRincianKegiatanHdr[index]['KODE_KEGIATAN']), true)
+                if (detailData) {
+                    dataRincianKegiatanHdr[index]['JUMLAH_BIAYA'] = detailData['TOTAL_JUMLAH_BIAYA']
+                }
+            }
+            resultData.push(dataRincianKegiatanHdr[index])
+        }
+
+        // save dtl data rincian kegiatan
+        await tempRincianKegiatan.bulkCreate(resultData)
+
+        // generate total data rincian kegiatan
+        console.log(`proces generate grand total data rincian kegiatan uid : ${revUid} complete`)
+        let grandTotal = await select(getGrandTotalRincianKegiatan(revUid), true)
+        if (grandTotal) await tempRincianKegiatan.create(grandTotal)
+
+        console.log(`proces generate data rincian kegiatan uid : ${revUid} complete`)
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 export {
     getDataPok,
     saveRencanaKerja,
@@ -855,5 +898,6 @@ export {
     generateStrukturKegiatanService,
     regenerateReportLembarKontrol,
     generateLingkupKegiatanService,
-    generateLingkupKegiatanBulkService
+    generateLingkupKegiatanBulkService,
+    generateRincianKegiatanService
 }

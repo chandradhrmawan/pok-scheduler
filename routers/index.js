@@ -8,7 +8,8 @@ import {
     generateStrukturKegiatan,
     regenerateReport,
     generateLingkupKegiatan,
-    generateLingkupKegiatanBulk
+    generateLingkupKegiatanBulk,
+    generateRincianKegiatan
 } from "../controller/pokController.js";
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get('/pok/get', getPok);
 router.get('/pok/lembar-kontrol/generate', generateLembarKontrol);
 router.get('/pok/struktur-kegiatan/generate', generateStrukturKegiatan);
 router.get('/pok/lingkup-kegiatan/generate', generateLingkupKegiatan);
-
+router.get('/pok/rincian-kegiatan/generate', generateRincianKegiatan);
 //check no row data
 router.get('/pok/regenerate/:tipe', regenerateReport);
 router.get('/pok/lingkup-kegiatan/bulkGenerate', generateLingkupKegiatanBulk);

@@ -763,7 +763,7 @@ const getDataLingkupKegiatanSubTotal = (revUid, kodeKegiatan) => {
         and KODE_KEGIATAN like '${kodeKegiatan}%'`
 }
 
-const getDataLingkupKegiatanGrandTotal = (revUid,nmSatker) => {
+const getDataLingkupKegiatanGrandTotal = (revUid, nmSatker) => {
     return `
     select
     UID,
@@ -801,6 +801,72 @@ const getDataLingkupKegiatanGrandTotal = (revUid,nmSatker) => {
         and KODE_KEGIATAN is null`
 }
 
+const getDataRincianKegiatanHdr = (revUid) => {
+    return `SELECT
+        UID,
+        POK_UID,
+        REV_UID,
+        STATUS,
+        STATUS_DATA,
+        LVL,
+        KODE_KEGIATAN,
+        NOITEM1,
+        NAMA_KEGIATAN,
+        VOLUME_KEGIATAN,
+        SATUAN,
+        JUMLAH_BIAYA,
+        SUMBER_DANA,
+        CARA_BAYAR,
+        JENIS_KONTRAK,
+        KET,
+        BOLD,
+        PERIODE
+    FROM
+        pok_online.v_5_rincian_kegiatan
+    WHERE
+        REV_UID  = '${revUid}'`
+}
+
+const getSumDataRincianKegiatanDtl = (revUid, kodeKegiatan) => {
+    return `select
+        SUM(JUMLAH_BIAYA) as TOTAL_JUMLAH_BIAYA
+    from
+        v_5_rincian_kegiatan
+    where
+        REV_UID = '${revUid}'
+        and KODE_KEGIATAN LIKE '${kodeKegiatan}%'`
+}
+
+const getGrandTotalRincianKegiatan = (revUid) => {
+    return `select
+        null as ID,
+        a.UID,
+        a.POK_UID,
+        a.REV_UID,
+        'AWAL' as STATUS,
+        '0' as STATUS_DATA,
+        '10' as LVL,
+        null as KODE_KEGIATAN ,
+        '0' as NOITEM1,
+        concat('TOTAL PELAKSANAAN ', c.NMSATKER) AS NAMA_KEGIATAN,
+        null as VOLUME_KEGIATAN ,
+        'KM' as SATUAN ,
+        SUM(a.JUMLAH_BIAYA) AS JUMLAH_BIAYA,
+        null as SUMBER_DANA ,
+        '020' as CARA_BAYAR ,
+        null as JENIS_KONTRAK ,
+        null as KET,
+        'Y' as BOLD,
+        '0' as PERIODE
+    from
+        temp_rincian_kegiatan a
+        join d_pok b on a.POK_UID = b.UID 
+        join dbzt_satker c on c.UID = b.SATKER_UID 
+    WHERE
+        a.REV_UID = '${revUid}'
+    AND LENGTH(KODE_KEGIATAN) = '2'`
+}
+
 export {
     getDataLembarKontrol1,
     rencanaKerja1,
@@ -810,5 +876,8 @@ export {
     getDataLingkupKegiatanHdr,
     getDataLingkupKegiatanDtl,
     getDataLingkupKegiatanSubTotal,
-    getDataLingkupKegiatanGrandTotal
+    getDataLingkupKegiatanGrandTotal,
+    getDataRincianKegiatanHdr,
+    getSumDataRincianKegiatanDtl,
+    getGrandTotalRincianKegiatan
 }

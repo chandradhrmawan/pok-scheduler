@@ -8,7 +8,8 @@ import {
     generateStrukturKegiatanService,
     regenerateReportLembarKontrol,
     generateLingkupKegiatanService,
-    generateLingkupKegiatanBulkService
+    generateLingkupKegiatanBulkService,
+    generateRincianKegiatanService
 } from "../services/pokServices.js";
 import moment from "moment";
 moment.locale('id');
@@ -137,6 +138,19 @@ const generateLingkupKegiatanBulk = async (req, res) => {
     }
 }
 
+const generateRincianKegiatan = async (req, res) => {
+    try {
+        let { revUid } = req.query
+        setTimeout(async function () {
+            await generateRincianKegiatanService(revUid);
+        }, 1000);
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.toString()))
+    }
+}
+
 export {
     getPok,
     deletePok,
@@ -146,5 +160,6 @@ export {
     generateStrukturKegiatan,
     regenerateReport,
     generateLingkupKegiatan,
-    generateLingkupKegiatanBulk
+    generateLingkupKegiatanBulk,
+    generateRincianKegiatan
 }
