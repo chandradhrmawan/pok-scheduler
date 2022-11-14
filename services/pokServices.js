@@ -888,6 +888,25 @@ const generateRincianKegiatanService = async (revUid) => {
     }
 }
 
+const generateLembarKontrolBulkService = async () => {
+    let sql = `select x.* from (
+        select
+            a.SATKER_UID,
+            b.KDSATKER,
+            c.UID AS REV_UID,
+            (select count (*) from d_lembar_kontrol_1 tlk  where D_POK_REVISION_UID = c.UID) AS JML
+        from
+            d_pok a
+            join dbzt_satker b on a.SATKER_UID = b.UID 
+            join d_pok_revision c on c.POK_UID  = a.UID) x
+        where x.jml = 0`
+    let dataReport = await select(sql)
+    for (let index = 0; index < dataReport.length; index++) {
+        await generateLembarService(dataReport[index]['REV_UID'])
+    }
+    console.log('finished')
+}
+
 export {
     getDataPok,
     saveRencanaKerja,
@@ -899,5 +918,6 @@ export {
     regenerateReportLembarKontrol,
     generateLingkupKegiatanService,
     generateLingkupKegiatanBulkService,
-    generateRincianKegiatanService
+    generateRincianKegiatanService,
+    generateLembarKontrolBulkService
 }
