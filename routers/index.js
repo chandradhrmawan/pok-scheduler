@@ -22,7 +22,7 @@ router.get('/pok/sidako/uploaded-pok', uploadedPok);
 router.get('/pok/sidako/approved-pok', approvedPok);
 
 //generate report pok
-router.get('/pok/get', getPok);
+router.get('/pok/get', getPok); /* rencana kerja */
 router.get('/pok/lembar-kontrol/generate', generateLembarKontrol);
 router.get('/pok/struktur-kegiatan/generate', generateStrukturKegiatan);
 router.get('/pok/lingkup-kegiatan/generate', generateLingkupKegiatan);
@@ -32,7 +32,7 @@ router.get('/pok/rincian-kegiatan/generate', generateRincianKegiatan);
 router.get('/pok/lembar-kontrol/generate-sync', generateLembarKontrolSync);
 
 //check no row data
-router.get('/pok/regenerate/:tipe', regenerateReport);
+router.get('/pok/regenerate/:tipe', regenerateReport); /* rencana kerja */
 router.get('/pok/lembar-kontrol/bulkGenerate', generateLembarKontrolBulk);
 router.get('/pok/struktur-kegiatan/bulkGenerate', generateStrukturKegiatanBulk);
 router.get('/pok/lingkup-kegiatan/bulkGenerate', generateLingkupKegiatanBulk);
