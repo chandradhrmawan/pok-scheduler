@@ -907,6 +907,44 @@ const generateLembarKontrolBulkService = async () => {
     console.log('finished')
 }
 
+const generateStrukturKegiatanBulkService = async () => {
+    let sql = `select x.* from (
+        select
+            a.SATKER_UID,
+            b.KDSATKER,
+            c.UID AS REV_UID,
+            (select count (*) from temp_struktur_kegiatan tsk where REV_UID = c.UID) AS JML
+        from
+            d_pok a
+            join dbzt_satker b on a.SATKER_UID = b.UID 
+            join d_pok_revision c on c.POK_UID  = a.UID) x
+        where x.jml = 0`
+    let dataReport = await select(sql)
+    for (let index = 0; index < dataReport.length; index++) {
+        await generateStrukturKegiatanService(dataReport[index]['REV_UID'])
+    }
+    console.log('finished')
+}
+
+const generateRincianKegiatanBulkService = async () => {
+    let sql = `select x.* from (
+        select
+            a.SATKER_UID,
+            b.KDSATKER,
+            c.UID AS REV_UID,
+            (select count (*) from temp_rincian_kegiatan tsk where REV_UID = c.UID) AS JML
+        from
+            d_pok a
+            join dbzt_satker b on a.SATKER_UID = b.UID 
+            join d_pok_revision c on c.POK_UID  = a.UID) x
+        where x.jml = 0`
+    let dataReport = await select(sql)
+    for (let index = 0; index < dataReport.length; index++) {
+        await generateRincianKegiatanService(dataReport[index]['REV_UID'])
+    }
+    console.log('finished')
+}
+
 export {
     getDataPok,
     saveRencanaKerja,
@@ -919,5 +957,7 @@ export {
     generateLingkupKegiatanService,
     generateLingkupKegiatanBulkService,
     generateRincianKegiatanService,
-    generateLembarKontrolBulkService
+    generateLembarKontrolBulkService,
+    generateStrukturKegiatanBulkService,
+    generateRincianKegiatanBulkService
 }

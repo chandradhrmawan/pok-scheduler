@@ -10,7 +10,9 @@ import {
     generateLingkupKegiatanService,
     generateLingkupKegiatanBulkService,
     generateRincianKegiatanService,
-    generateLembarKontrolBulkService
+    generateLembarKontrolBulkService,
+    generateStrukturKegiatanBulkService,
+    generateRincianKegiatanBulkService
 } from "../services/pokServices.js";
 import moment from "moment";
 moment.locale('id');
@@ -176,6 +178,34 @@ const generateLembarKontrolBulk = async (req, res) => {
     }
 }
 
+const generateStrukturKegiatanBulk = async (req, res) => {
+    try {
+        let { revUid } = req.query
+        setTimeout(async function () {
+            await generateStrukturKegiatanBulkService(revUid);
+        }, 1000);
+
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.message))
+    }
+}
+
+const generateRincianKegiatanBulk = async (req, res) => {
+    try {
+        let { revUid } = req.query
+        setTimeout(async function () {
+            await generateRincianKegiatanBulkService(revUid);
+        }, 1000);
+
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.message))
+    }
+}
+
 export {
     getPok,
     deletePok,
@@ -188,5 +218,7 @@ export {
     generateLingkupKegiatanBulk,
     generateRincianKegiatan,
     generateLembarKontrolSync,
-    generateLembarKontrolBulk
+    generateLembarKontrolBulk,
+    generateStrukturKegiatanBulk,
+    generateRincianKegiatanBulk
 }

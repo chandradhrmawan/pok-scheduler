@@ -11,7 +11,9 @@ import {
     generateLingkupKegiatanBulk,
     generateRincianKegiatan,
     generateLembarKontrolSync,
-    generateLembarKontrolBulk
+    generateLembarKontrolBulk,
+    generateStrukturKegiatanBulk,
+    generateRincianKegiatanBulk
 } from "../controller/pokController.js";
 const router = express.Router();
 
@@ -31,8 +33,10 @@ router.get('/pok/lembar-kontrol/generate-sync', generateLembarKontrolSync);
 
 //check no row data
 router.get('/pok/regenerate/:tipe', regenerateReport);
-router.get('/pok/lingkup-kegiatan/bulkGenerate', generateLingkupKegiatanBulk);
 router.get('/pok/lembar-kontrol/bulkGenerate', generateLembarKontrolBulk);
+router.get('/pok/struktur-kegiatan/bulkGenerate', generateStrukturKegiatanBulk);
+router.get('/pok/lingkup-kegiatan/bulkGenerate', generateLingkupKegiatanBulk);
+router.get('/pok/rincian-kegiatan/bulkGenerate', generateRincianKegiatanBulk);
 
 //delete data pok
 router.delete('/pok/delete', deletePok);
