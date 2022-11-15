@@ -362,43 +362,44 @@ const approvedPokService = async (data) => {
 
 const generateLembarService = async (revUid) => {
     try {
+
         let isExsist = await dLembarKontrol1.findOne({ where: { D_POK_REVISION_UID: revUid } })
         if (isExsist) {
             console.log(`data d_lembar_kontrol_1 : ${revUid} already exsist`)
-            return true
+            // return true
             // delete d_lembar_kontrol_1
+        } else {
+            console.log(`start process generate lembar kontrol :  d_lembar_kontrol_1`)
+            // generate d_lembar_kontrol
+            let vieName = ['v_cl1_09_14', 'v_cl1_15', 'v_cl1_16', 'v_cl1_17', 'v_cl1_18', 'v_cl1_19', 'v_cl1_20', 'v_cl1_21', 'v_cl1_22', 'v_cl1_23']
+            for (let index = 0; index < vieName.length; index++) {
+                let data1 = await db.query(getDataLembarKontrol1(vieName[index], revUid), {
+                    plain: false,
+                    type: QueryTypes.SELECT,
+                })
+                console.log(data1)
+                console.log(`proces view : ${vieName[index]}`)
+                await dLembarKontrol1.bulkCreate(data1)
+            }
         }
-
-        console.log(`start process generate lembar kontrol`)
-        // generate d_lembar_kontrol
-        let vieName = ['v_cl1_09_14', 'v_cl1_15', 'v_cl1_16', 'v_cl1_17', 'v_cl1_18', 'v_cl1_19', 'v_cl1_20', 'v_cl1_21', 'v_cl1_22', 'v_cl1_23']
-        for (let index = 0; index < vieName.length; index++) {
-            let data1 = await db.query(getDataLembarKontrol1(vieName[index], revUid), {
-                plain: false,
-                type: QueryTypes.SELECT,
-            })
-            console.log(data1)
-            console.log(`proces view : ${vieName[index]}`)
-            await dLembarKontrol1.bulkCreate(data1)
-        }
-
 
         let isExsist2 = await dLembarKontrolPenRo.findOne({ where: { D_POK_REVISION_UID: revUid } })
         if (isExsist2) {
             console.log(`data pen ro : ${revUid} already exsist`)
-            return true
+            // return true
             // delete d_lembar_kontrol_1
+        } else {
+            console.log(`start process generate lembar kontrol :  d_lembar_kontrol_1_pen_ro`)
+            let data2 = await db.query(lembarKontrolPenRo(revUid), {
+                plain: false,
+                type: QueryTypes.SELECT,
+            })
+            console.log(data2)
+            console.log(`proces view pen ro : ${revUid}`)
+            await dLembarKontrolPenRo.bulkCreate(data2)
         }
 
-        let data2 = await db.query(lembarKontrolPenRo(revUid), {
-            plain: false,
-            type: QueryTypes.SELECT,
-        })
-        console.log(data2)
-        console.log(`proces view pen ro : ${revUid}`)
-        await dLembarKontrolPenRo.bulkCreate(data2)
-
-        console.log(`proces complete`)
+        console.log(`generate report lembar kontrol : ${revUid} complete`)
     } catch (err) {
         console.log(err)
     }
