@@ -550,8 +550,13 @@ const generateStrukturKegiatanService = async (revUid) => {
                         skV1[index]['SASARAN_VOLUME'] = volume.slice(0, -1);
                         skV1[index]['KODE_KEGIATAN'] = `** ${skV1[index]['KODE_KEGIATAN']}`
                     } else {
-                        skV1[index]['SASARAN_SATUAN'] = dataSatuan[0]['SASARAN_VOLUME'] != '0' ? dataSatuan[0]['SASARAN_SATUAN'] : '-'
-                        skV1[index]['SASARAN_VOLUME'] = parseFloat(dataSatuan[0]['SASARAN_VOLUME']).toFixed(2)
+                        try {
+                            skV1[index]['SASARAN_SATUAN'] = dataSatuan[0]['SASARAN_VOLUME'] != '0' ? dataSatuan[0]['SASARAN_SATUAN'] : '-'
+                            skV1[index]['SASARAN_VOLUME'] = parseFloat(dataSatuan[0]['SASARAN_VOLUME']).toFixed(2)
+                        } catch (err) {
+                            skV1[index]['SASARAN_SATUAN'] = '-'
+                            skV1[index]['SASARAN_VOLUME'] = '-'
+                        }
                     }
                 }
 
