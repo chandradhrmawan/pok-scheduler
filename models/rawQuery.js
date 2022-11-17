@@ -370,7 +370,7 @@ left join (
         pok_online.tr_satuan_3 sat
     where
         sat.KDBEBAN <> 'K'
-        and sat.KDJNSBAN = '0'
+        and sat.KDJNSBAN IS NOT NULL
     group by
         concat(sat.KDOUTPUT, '.', sat.KDSOUTPUT),
         sat.KDSATKER,
@@ -627,7 +627,7 @@ left join (
         pok_online.dbzd_po po
     where
         po.KDBEBAN <> 'K'
-        and po.KDJNSBAN = '0'
+        and po.KDJNSBAN IS NOT NULL
     group by
         concat(po.KDOUTPUT, '.', po.KDSOUTPUT),
         po.KDSATKER,
