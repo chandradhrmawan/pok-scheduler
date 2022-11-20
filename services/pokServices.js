@@ -20,7 +20,13 @@ import { dLembarKontrolPenRo } from "../models/dLembarKontrolPenRo.js";
 import { tempLingkupKegiatan } from "../models/tempLingkupKegiatan.js";
 import { select } from "../helpers/generalHelpers.js";
 import { tempRincianKegiatan } from "../models/tempRincianKegiatan.js";
+import { trSatuan3 } from "../models/trSatuan3.js";
+import { trBmData } from "../models/trBmdata.js";
+import { trLinkDesc } from "../models/trLinkDesc.js";
+import fs from "fs";
 import axios from "axios";
+import { v4 as uuidv4 } from 'uuid';
+import { fixDataLembarKontrolPenRo } from "./lembarKontrolServices.js";
 
 
 const getDataPok = async (revUid) => {
@@ -379,6 +385,9 @@ const generateLembarService = async (revUid) => {
                 })
                 console.log(data1)
                 console.log(`proces view : ${vieName[index]}`)
+
+
+
                 await dLembarKontrol1.bulkCreate(data1)
             }
         }
@@ -394,9 +403,10 @@ const generateLembarService = async (revUid) => {
                 plain: false,
                 type: QueryTypes.SELECT,
             })
-            console.log(data2)
+            // console.log(data2)
+            let resultPenRo = await fixDataLembarKontrolPenRo(data2)
             console.log(`proces view pen ro : ${revUid}`)
-            await dLembarKontrolPenRo.bulkCreate(data2)
+            await dLembarKontrolPenRo.bulkCreate(resultPenRo)
         }
 
         console.log(`generate report lembar kontrol : ${revUid} complete`)
@@ -951,6 +961,41 @@ const generateRincianKegiatanBulkService = async () => {
     console.log('finished')
 }
 
+const uploadRefService = async (tipe) => {
+
+    let jsonRaw;
+    let modelName;
+    if (tipe == 'tr_bmdata') {
+        jsonRaw = 'tr_bmdata.json'
+        modelName = trBmData;
+    } else if (tipe == 'tr_linkdesc') {
+        jsonRaw = 'tr_linkdesc.json'
+        modelName = trLinkDesc;
+    } else if (tipe == 'tr_satuan_3') {
+        jsonRaw = 'satuan_3.json'
+        modelName = trSatuan3;
+    }
+
+    let data = await fs.readFileSync(`D:/POK-APP/pok-scheduler/assets/json/${jsonRaw}`)
+    let jsonData = JSON.parse(data)
+
+    //let postData = []
+    let avoidData = ['@sequenceNumber', '@deleted', '\r', '', '_NullFlags']
+    for (let index = 0; index < jsonData.length; index++) {
+        avoidData.map(row => delete jsonData[index][row])
+        jsonData[index]['ACTIVE_IND'] = 'Y'
+        jsonData[index]['UID'] = uuidv4()
+        //postData.push(jsonData[index])
+
+        await modelName.create(jsonData[index]).catch(err => console.log(err))
+        console.log(`${index + 1} data excecuted`)
+    }
+
+    console.log('complete')
+    // await modelName.create(postData[0])
+    // return 'success'
+}
+
 export {
     getDataPok,
     saveRencanaKerja,
@@ -965,5 +1010,6 @@ export {
     generateRincianKegiatanService,
     generateLembarKontrolBulkService,
     generateStrukturKegiatanBulkService,
-    generateRincianKegiatanBulkService
+    generateRincianKegiatanBulkService,
+    uploadRefService
 }

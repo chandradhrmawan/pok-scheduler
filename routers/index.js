@@ -13,7 +13,8 @@ import {
     generateLembarKontrolSync,
     generateLembarKontrolBulk,
     generateStrukturKegiatanBulk,
-    generateRincianKegiatanBulk
+    generateRincianKegiatanBulk,
+    uploadRef
 } from "../controller/pokController.js";
 const router = express.Router();
 
@@ -40,4 +41,7 @@ router.get('/pok/rincian-kegiatan/bulkGenerate', generateRincianKegiatanBulk);
 
 //delete data pok
 router.delete('/pok/delete', deletePok);
+
+//export data reff
+router.get('/pok/upload-ref', uploadRef);
 export { router }

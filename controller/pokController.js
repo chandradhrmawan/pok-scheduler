@@ -12,7 +12,8 @@ import {
     generateRincianKegiatanService,
     generateLembarKontrolBulkService,
     generateStrukturKegiatanBulkService,
-    generateRincianKegiatanBulkService
+    generateRincianKegiatanBulkService,
+    uploadRefService
 } from "../services/pokServices.js";
 import moment from "moment";
 moment.locale('id');
@@ -206,6 +207,25 @@ const generateRincianKegiatanBulk = async (req, res) => {
     }
 }
 
+const uploadRef = async (req, res) => {
+    try {
+        /*
+        *pilihan tipe
+        tr_satuan_3
+        tr_bmdata
+        tr_linkdesc
+        */
+        let tipe = 'tr_linkdesc';
+        setTimeout(async function () {
+            await uploadRefService(tipe);
+        }, 1000);
+        return res.status(statusCode.success).json(successMessage())
+    } catch (err) {
+        console.log(err)
+        return res.status(statusCode.bad).json(errorMessage(err.toString()))
+    }
+}
+
 export {
     getPok,
     deletePok,
@@ -220,5 +240,6 @@ export {
     generateLembarKontrolSync,
     generateLembarKontrolBulk,
     generateStrukturKegiatanBulk,
-    generateRincianKegiatanBulk
+    generateRincianKegiatanBulk,
+    uploadRef
 }

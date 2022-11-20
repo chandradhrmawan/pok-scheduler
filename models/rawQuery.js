@@ -319,7 +319,7 @@ left join (
         round(sum(sat.VOLKEG), 2) AS VAL,
         ucase(sat.SATKEG) AS SATKEG
     from
-        pok_online.dbzd_po sat
+        pok_online.tr_satuan_3 sat
     where
         sat.KDJNSBAN = '0'
         AND sat.SATKEG in ('KM','M','DOKUMEN','LAYANAN')
