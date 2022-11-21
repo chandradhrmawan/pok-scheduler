@@ -60,7 +60,7 @@ const fixDataLembarKontrolPenRo = async (rawData) => {
                 rawData[index]['AKHIR_VOL'] = dataVolAkhir['VAL']
             }
 
-            if (rawData[index]['SATUAN'] == 'LAYANAN' || rawData[index]['SATUAN'] == 'DOKUMEN') {
+            if (rawData[index]['SATUAN'] == 'LAYANAN' || rawData[index]['SATUAN'] == 'DOKUMEN' || rawData[index]['SATUAN'] == 'UNIT') {
                 let dataVolAkhir1 = await db.query(`select
                     sat.KDJNSBAN,
                     sat.KDOUTPUT,
@@ -74,7 +74,9 @@ const fixDataLembarKontrolPenRo = async (rawData) => {
                     and D_POK_REVISION_UID = '${rawData[index]['D_POK_REVISION_UID']}'
                     and sat.KDOUTPUT = '${KDOUTPUT}'
                     and sat.KDSOUTPUT = '${KDSOUTPUT}'
-                    AND sat.SATKEG = SUBSTR('${rawData[index]['SATUAN']}',1,5) 
+                    AND sat.SATKEG = SUBSTR('${rawData[index]['SATUAN']}',1,5)
+                    AND sat.SATKEG = sat.SNF_SAT
+                    AND LVL = '05' 
                 group by
                     sat.KDJNSBAN,
                     sat.KDOUTPUT,
