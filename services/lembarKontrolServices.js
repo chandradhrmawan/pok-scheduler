@@ -20,6 +20,7 @@ const fixDataLembarKontrolPenRo = async (rawData) => {
                 and sat.KDSATKER = '${rawData[index]['KDSATKER']}'
                 and sat.KDOUTPUT = '${KDOUTPUT}'
                 and sat.KDSOUTPUT = '${KDSOUTPUT}'
+                and sat.LVL = '05'
             group by
                 sat.KDOUTPUT,
                 sat.KDSOUTPUT,
