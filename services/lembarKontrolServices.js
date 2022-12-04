@@ -10,7 +10,7 @@ const fixDataLembarKontrolPenRo = async (rawData) => {
             let dataVol = await db.query(`select
                 sat.KDOUTPUT,
                 sat.KDSOUTPUT,
-                round(sum(sat.VOLKEG), 2) AS VAL,
+                round((sat.VOLKEG), 2) AS VAL,
                 ucase(sat.SATKEG) AS SATKEG
             from
                 pok_online.tr_satuan_3 sat
