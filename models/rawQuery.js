@@ -760,7 +760,8 @@ const getDataLingkupKegiatanSubTotal = (revUid, kodeKegiatan) => {
         v_3_lingkup_kegiatan
     where
         REV_UID = '${revUid}'
-        and KODE_KEGIATAN like '${kodeKegiatan}%'`
+        and KODE_KEGIATAN like '${kodeKegiatan}%'
+        and LVL = '04'`
 }
 
 const getDataLingkupKegiatanGrandTotal = (revUid, nmSatker) => {
