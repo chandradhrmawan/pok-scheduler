@@ -281,6 +281,7 @@ from
     join dbzt_satker d on d.UID = c.SATKER_UID 
 where
     d.KDSATKER  = $1
+    and b.ACTIVE_IND = 'Y'
     and b.DS_STATUS = $2`, {
         bind: [data['kdsatker'], data['revstatus']],
         plain: true,
