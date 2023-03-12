@@ -267,22 +267,40 @@ const delPok = async (data) => {
 }
 
 const getDataKordinat = async (data) => {
-    let dataKordinat = await db.query(`select
+    let dataKordinat = await db.query(`
+    select
     b.UID, 
     d.KDSATKER,
     b.THANG,
-    b.DS_STATUS,
+    max_ds.MAX_STATUS as DS_STATUS,
     DATE_FORMAT(b.UPLOAD_DATE,'%d-%m-%Y %H:%i:%s') as UPLOAD_DATE, 
-    DATE_FORMAT(b.APPROVED_BALAI_DATE,'%d-%m-%Y %H:%i:%s') as APPROVED_BALAI_DATE
-from
+    DATE_FORMAT(b.APPROVED_BALAI_DATE,'%d-%m-%Y %H:%i:%s') as APPROVED_BALAI_DATE,
+    max_ds.PERIODE
+    from
     d_pok_revision a
     join d_koordinat_status b on a.UID = b.POK_REVISION_UID 
     join d_pok c on c.uid = a.POK_UID 
-    join dbzt_satker d on d.UID = c.SATKER_UID 
+    join dbzt_satker d on d.UID = c.SATKER_UID
+    join (
+		select
+		dd.D_POK_REVISION_UID,
+		max(dd.STATUS) as MAX_STATUS,
+		dd.THANG ,
+		dd.KDSATKER,
+		dd.PERIODE 
+		from
+			pok_online.dbzd_ds dd
+		GROUP BY
+		dd.D_POK_REVISION_UID,
+		dd.THANG,
+		dd.KDSATKER,
+		dd.PERIODE
+	) max_ds on max_ds.D_POK_REVISION_UID = a.UID 
+	and a.REVISION_SEQ_NO = max_ds.PERIODE 
 where
     d.KDSATKER  = $1
     and b.ACTIVE_IND = 'Y'
-    and b.DS_STATUS = $2`, {
+    and max_ds.PERIODE = $2`, {
         bind: [data['kdsatker'], data['revstatus']],
         plain: true,
         type: QueryTypes.SELECT,
