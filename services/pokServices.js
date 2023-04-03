@@ -318,7 +318,7 @@ const uploadedPokService = async (data) => {
             status: dataKordinat['DS_STATUS'],
             upload_date: dataKordinat['UPLOAD_DATE'],
         }
-        await axios.post('http://sidako-pok.binamarga.pu.go.id/sidako_update/services/uploaded-pok',
+        await axios.post('https://sidako-pok.binamarga.pu.go.id/sidako_update/services/uploaded-pok',
             postData).then(function async(response) {
                 console.log(response)
                 uploadedStatus = response['data']['saved']
@@ -357,7 +357,7 @@ const approvedPokService = async (data) => {
             upload_date: dataKordinat['UPLOAD_DATE'],
             approved_date: dataKordinat['APPROVED_BALAI_DATE'],
         }
-        await axios.post('http://sidako-pok.binamarga.pu.go.id/sidako_update/services/approved-pok',
+        await axios.post('https://sidako-pok.binamarga.pu.go.id/sidako_update/services/approved-pok',
             postData).then(function async(response) {
                 console.log(response)
                 uploadedStatus = response['data']['saved']
