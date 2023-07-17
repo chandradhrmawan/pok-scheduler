@@ -266,7 +266,7 @@ const delPok = async (data) => {
     }
 }
 
-const getDataKordinat = async (data) => {
+const getDataKordinat = async ({ kdsatker, revstatus, thang }) => {
     let dataKordinat = await db.query(`
     select
     b.UID, 
@@ -300,16 +300,17 @@ const getDataKordinat = async (data) => {
 where
     d.KDSATKER  = $1
     and b.ACTIVE_IND = 'Y'
-    and max_ds.PERIODE = $2`, {
-        bind: [data['kdsatker'], data['revstatus']],
+    and max_ds.PERIODE = $2
+    and b.THANG = $3`, {
+        bind: [kdsatker, revstatus, thang],
         plain: true,
         type: QueryTypes.SELECT,
     })
     return dataKordinat
 }
 
-const uploadedPokService = async (data) => {
-    let dataKordinat = await getDataKordinat(data)
+const uploadedPokService = async ({ kdsatker, revstatus, thang }) => {
+    let dataKordinat = await getDataKordinat({ kdsatker, revstatus, thang })
     let uploadedStatus = null
     if (dataKordinat) {
         let postData = {
@@ -318,7 +319,7 @@ const uploadedPokService = async (data) => {
             status: dataKordinat['DS_STATUS'],
             upload_date: dataKordinat['UPLOAD_DATE'],
         }
-        await axios.post('https://sidako-pok.binamarga.pu.go.id/sidako_update/services/uploaded-pok',
+        await axios.post('https://sidako-pok.binamarga.pu.go.id/services/uploaded-pok',
             postData).then(function async(response) {
                 console.log(response)
                 uploadedStatus = response['data']['saved']
@@ -346,8 +347,8 @@ const uploadedPokService = async (data) => {
     }
 }
 
-const approvedPokService = async (data) => {
-    let dataKordinat = await getDataKordinat(data)
+const approvedPokService = async ({ kdsatker, revstatus, thang }) => {
+    let dataKordinat = await getDataKordinat({ kdsatker, revstatus, thang })
     let uploadedStatus = null
     if (dataKordinat) {
         let postData = {
@@ -357,7 +358,7 @@ const approvedPokService = async (data) => {
             upload_date: dataKordinat['UPLOAD_DATE'],
             approved_date: dataKordinat['APPROVED_BALAI_DATE'],
         }
-        await axios.post('https://sidako-pok.binamarga.pu.go.id/sidako_update/services/approved-pok',
+        await axios.post('https://sidako-pok.binamarga.pu.go.id/services/approved-pok',
             postData).then(function async(response) {
                 console.log(response)
                 uploadedStatus = response['data']['saved']
